@@ -1,0 +1,70 @@
+The file /home/project/src/styles.css has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+  56→  --color-text-2: var(--text-2);
+  57→  --color-text-3: var(--text-3);
+  58→}
+  59→
+  60→:root {
+  61→  --sidebar-width: 248px;
+  62→  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  63→  --ease-fast: 160ms cubic-bezier(0.4, 0, 0.2, 1);
+  64→  --radius: 0.5rem;
+  65→
+  66→  /* Premium Enterprise Light Theme - 深邃蓝灰 + 翡翠绿 */
+  67→  --background: #f8fafc;
+  68→  --foreground: #0f172a;
+  69→  --card: #ffffff;
+  70→  --card-foreground: #0f172a;
+  71→  --popover: #ffffff;
+  72→  --popover-foreground: #0f172a;
+  73→  --primary: #0f172a;
+  74→  --primary-foreground: #ffffff;
+  75→  --secondary: #e2e8f0;
+  76→  --secondary-foreground: #0f172a;
+  77→  --muted: #f1f5f9;
+  78→  --muted-foreground: #64748b;
+  79→  --accent: #dcfce7;
+  80→  --accent-foreground: #166534;
+  81→  --destructive: #ef4444;
+  82→  --destructive-foreground: #ffffff;
+  83→  --border: #cbd5e1;
+  84→  --border-2: #94a3b8;
+  85→  --input: #f1f5f9;
+  86→  --ring: #22c55e;
+  87→
+  88→  /* Surface 层级 - 精致灰白 */
+  89→  --surface: #ffffff;
+  90→  --surface-2: #f8fafc;
+  91→  --surface-3: #f1f5f9;
+  92→  --text-2: #475569;
+  93→  --text-3: #64748b;
+  94→
+  95→  /* Chart 颜色 - 专业色系 */
+  96→  --chart-1: #0f172a;
+  97→  --chart-2: #1e293b;
+  98→  --chart-3: #334155;
+  99→  --chart-4: #475569;
+ 100→  --chart-5: #64748b;
+ 101→
+ 102→  /* Sidebar */
+ 103→  --sidebar: #f8fafc;
+ 104→  --sidebar-foreground: #0f172a;
+ 105→  --sidebar-primary: #0f172a;
+ 106→  --sidebar-primary-foreground: #ffffff;
+ 107→  --sidebar-accent: #e2e8f0;
+ 108→  --sidebar-accent-foreground: #0f172a;
+ 109→  --sidebar-border: #e2e8f0;
+ 110→  --sidebar-ring: #22c55e;
+ 111→}
+ 112→
+ 113→.dark {
+ 114→  /* Professional Blue-Gray Dark Theme */
+ 115→  --background: #0f172a;
+ 116→  --foreground: #f1f5f9;
+
+<system-reminder>
+MANDATORY: User-selected skills MUST be loaded first:
+- `ui-ux-pro-max`
+Call Skill tool for ALL skills above in your FIRST response. You can invoke multiple Skill tool calls in parallel. Do not skip. Do not load other skills before these.
+</system-reminder>

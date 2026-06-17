@@ -1,0 +1,13 @@
+The file /home/project/src/routes/index.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+1352→    </div>
+1353→  );
+1354→}
+1355→
+1356→// 主页面
+1357→function Index() {
+1358→  return (
+1359→    <div className="flex flex-col h-full">
+1360→      <TopBar />
+1361→      <div className="flex-1 overflow-auto p-5 scrollbar-thin">

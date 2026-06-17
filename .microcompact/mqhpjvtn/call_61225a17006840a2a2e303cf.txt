@@ -1,0 +1,59 @@
+The file /home/project/src/styles.css has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+ 109→  --sidebar-border: #e2e8f0;
+ 110→  --sidebar-ring: #22c55e;
+ 111→}
+ 112→
+ 113→.dark {
+ 114→  /* Premium Enterprise Dark Theme - 深邃夜空 + 翡翠绿 */
+ 115→  --background: #020617;
+ 116→  --foreground: #f8fafc;
+ 117→  --card: #0f172a;
+ 118→  --card-foreground: #f8fafc;
+ 119→  --popover: #0f172a;
+ 120→  --popover-foreground: #f8fafc;
+ 121→  --primary: #f8fafc;
+ 122→  --primary-foreground: #020617;
+ 123→  --secondary: #1e293b;
+ 124→  --secondary-foreground: #f8fafc;
+ 125→  --muted: #1e293b;
+ 126→  --muted-foreground: #94a3b8;
+ 127→  --accent: #064e3b;
+ 128→  --accent-foreground: #6ee7b7;
+ 129→  --destructive: #f87171;
+ 130→  --destructive-foreground: #020617;
+ 131→  --border: #1e293b;
+ 132→  --border-2: #334155;
+ 133→  --input: #0f172a;
+ 134→  --ring: #22c55e;
+ 135→  --surface: #0f172a;
+ 136→  --surface-2: #020617;
+ 137→  --surface-3: #1e293b;
+ 138→  --text-2: #94a3b8;
+ 139→  --text-3: #64748b;
+ 140→  --chart-1: #f8fafc;
+ 141→  --chart-2: #e2e8f0;
+ 142→  --chart-3: #cbd5e1;
+ 143→  --chart-4: #94a3b8;
+ 144→  --chart-5: #64748b;
+ 145→  --sidebar: #020617;
+ 146→  --sidebar-foreground: #f8fafc;
+ 147→  --sidebar-primary: #f8fafc;
+ 148→  --sidebar-primary-foreground: #020617;
+ 149→  --sidebar-accent: #1e293b;
+ 150→  --sidebar-accent-foreground: #f8fafc;
+ 151→  --sidebar-border: #1e293b;
+ 152→  --sidebar-ring: #22c55e;
+ 153→}
+ 154→
+ 155→@layer base {
+ 156→  * {
+ 157→    border-color: var(--color-border);
+ 158→  }
+
+<system-reminder>
+MANDATORY: User-selected skills MUST be loaded first:
+- `ui-ux-pro-max`
+Call Skill tool for ALL skills above in your FIRST response. You can invoke multiple Skill tool calls in parallel. Do not skip. Do not load other skills before these.
+</system-reminder>

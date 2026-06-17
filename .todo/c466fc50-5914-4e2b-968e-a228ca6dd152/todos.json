@@ -1,0 +1,38 @@
+[
+  {
+    "id": "1",
+    "status": "completed",
+    "content": "检查云服务状态并确认 profiles/user_roles 表是否存在",
+    "priority": "high"
+  },
+  {
+    "id": "2",
+    "status": "completed",
+    "content": "确保 profiles 表和触发器、user_roles 表、has_role 函数已创建",
+    "priority": "high"
+  },
+  {
+    "id": "3",
+    "status": "completed",
+    "content": "更新前端 auth 模块（注册/登录/退出）使用虚拟邮箱方案",
+    "priority": "high"
+  },
+  {
+    "id": "4",
+    "status": "completed",
+    "content": "更新登录页面支持注册功能",
+    "priority": "high"
+  },
+  {
+    "id": "5",
+    "status": "completed",
+    "content": "执行 deferredAuthActivationBase: enable-register-login --providers password",
+    "priority": "high"
+  },
+  {
+    "id": "6",
+    "status": "completed",
+    "content": "创建测试用户并验证 dev 启动正常",
+    "priority": "medium"
+  }
+]

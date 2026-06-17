@@ -1,0 +1,1413 @@
+<command-message>The "lightmorphism" skill is loaded</command-message>
+
+## Skill Content (`/home/project/skills/lightmorphism/SKILL.md`)
+
+> **Note**: The complete SKILL.md content is shown below. You do NOT need to read this file again using read_file tool. If this skill seems relevant to your current task, you MUST follow them exactly as documented.
+
+---
+name: lightmorphism
+description: >-
+  Use this skill whenever the user wants to build a website, landing page,
+  dashboard, internal tool, weekly digest, or any web UI / component in a
+  light-mode editorial aesthetic with subtle skeuomorphism — 'lightmorphism',
+  'light neumorphism', '暖光拟物', '轻拟物', '亮色重阴影', 'soft skeuomorphic',
+  'premium quiet'. Includes 4 named schemes: WARM (cream + taupe, editorial
+  / writing tools), MIST (cool slate-blue, engineering / B2B / fintech / AI
+  Coding), SAGE (sage green, wellness / AI / organic), PEARL (cool greige,
+  luxury / banking / formal). Triggers include gradient
+  hairline borders on cards, glass + inset white highlights, light-glass
+  primary buttons (NOT dark-filled), animated constellation backgrounds,
+  extra-light editorial serif headlines like Fraunces or 思源宋体 ExtraLight.
+  Pairs Fraunces + Geist (Latin) with Noto Serif SC + MiSans (CJK). 11
+  React + Tailwind code recipes, hard density rules, scheme-aware CSS
+  variables, self-check loop. Use even when the user does not say
+  'lightmorphism' — match on aesthetic intent.
+---
+
+# LIGHTMORPHISM Design System
+
+> **READ THIS FIRST.**
+>
+> This system has **three signature techniques** that define its identity: (1) the **gradient border shell** wrapping every surface, (2) the **glass + inset white highlight** on every card, and (3) a **scheme-tinted gradient page background** with a **Canvas-animated atmosphere layer** behind every hero. If any of these is missing, the result is NOT this system — it is a generic light-mode page.
+>
+> **Operating protocol — execute these three steps for EVERY single output, in order:**
+>
+> **Step 1 — Pick a scheme.** Match the user's brief to a row in the §2.2 Decision Matrix and commit to one of **WARM** / **MIST** / **SAGE** / **PEARL**. The four schemes are **not interchangeable presets** — they are tonal contracts tied to product domain. **Bias AWAY from WARM unless the brief is unambiguously editorial / writing / lifestyle / content.** Engineering, AI infra, dev tools, B2B, fintech → MIST. Wellness, AI companion, organic, sustainability → SAGE. Banking, luxury, gallery, formal → PEARL. Defaulting to WARM by reflex is the **#1 failure mode** of this skill.
+>
+> **Step 2 — Announce the pick at the top of your output.** Use this exact micro-format, on the first two lines of your response, in a blockquote:
+>
+> ```
+> > Scheme: <NAME> — picked because the brief mentions "<quoted user keyword>".
+> > Switch with "use [warm | mist | sage | pearl] scheme".
+> ```
+>
+> Concrete example for an AI Coding governance brief:
+>
+> ```
+> > Scheme: MIST — picked because the brief mentions "AI coding governance for Tech Leads".
+> > Switch with "use [warm | sage | pearl] scheme".
+> ```
+>
+> This announcement is **mandatory and non-optional**. It makes (a) your reasoning auditable and (b) the other three schemes discoverable to the user — otherwise they have no way to know alternatives exist.
+>
+> **Step 3 — Generate code.** Reference all colors via `var(--token)`, never hardcode hex inside Recipe components. Apply the picked scheme via `<html data-scheme="mist">` (or by including only that scheme's `:root` block).
+>
+> The mood across all four schemes is **editorial / premium quiet** — nothing shouts.
+
+---
+
+## 1. Overview
+
+A warm, editorial, light-mode system with subtle skeuomorphic depth. Surfaces read as glass with a hairline gradient shell. Typography pairs an editorial serif display with a clean geometric sans. The mood is "premium quiet" — nothing shouts.
+
+- **Layout:** Grid
+- **Content width:** Full Bleed
+- **Framing:** Glassy
+- **Grid:** Strong
+- **Mood:** Warm / Editorial / Quiet
+- **Motion intensity:** Moderate, interface-led
+
+---
+
+## 2. Color Schemes
+
+The system supports **four named schemes**: WARM (default), MIST, SAGE, PEARL. All four preserve lightmorphism's structural identity (light mode, gradient hairline shell, glass + inset highlight, Canvas atmosphere) — they differ only in **tonal undertone**. The Required Recipes (§4) reference colors via `var(--token)`, so swapping schemes means swapping a single `:root` block; **every component automatically re-tints**.
+
+### 2.1 How schemes work
+
+1. Drop one of the four `:root` blocks (or `:root[data-scheme="…"]`) below into the page's CSS.
+2. All Recipes reference `var(--accent-primary)`, `var(--bg-top)`, etc. — they do **not** hardcode hex.
+3. The Canvas atmosphere (Recipe 6) reads `--atmosphere-rgb` via `getComputedStyle()` so the constellation re-tints automatically.
+4. **Never mix tokens from two schemes** in one page. Commit to one.
+
+### 2.2 Decision Matrix — pick a scheme (MUST run before generating)
+
+**Match the user's brief to the strongest signal row below. If ANY row's keywords appear in the brief, you MUST pick that scheme — do NOT fall back to WARM.** WARM is the fallback only when the brief has zero domain signal (e.g., "build me a landing page" with no product type mentioned).
+
+Common failure mode: AI sees "looks like a clean light theme" and reflexively defaults to WARM. **This is wrong** — the four schemes encode product domain, not just aesthetic vibe. The whole point of having four schemes is that "AI coding tool" should NEVER look like "wellness app" should NEVER look like "private bank". Picking the wrong scheme is worse than missing a Recipe.
+
+| Brief mentions any of these keywords | MUST pick scheme |
+|---|---|
+| **Engineering** / **developer** / **dev tool** / **CLI** / **B2B** / **SaaS** / **fintech** / **analytics** / **data platform** / **API** / **AI infrastructure** / **AI coding** / **devops** / "engineered" / "technical" / "lab" | **MIST** *(cool slate-blue)* |
+| **Wellness** / **health** / **mindfulness** / **AI companion** / **sustainability** / **plant** / **food** / **organic** / **eco** / "calm" / "soft" / "natural" | **SAGE** *(sage green)* |
+| **Banking** / **wealth** / **private** / **luxury** / **gallery** / **museum** / **archive** / **publishing house** / **legal** / "restrained" / "minimal luxury" / "formal" | **PEARL** *(cool greige)* |
+| **Writing tool** / **design tool** / **journal** / **note** / **content platform** / **blog** / **lifestyle** / **magazine** / "editorial" / "premium quiet" | **WARM** *(warm cream)* |
+| **NO domain keyword present at all** — e.g., generic "build a page" with no product context | **WARM** *(fallback)* |
+
+**Bias check before committing**: re-read the brief and ask yourself — "is this clearly editorial/writing/lifestyle?" If the answer is no, WARM is the wrong choice.
+
+### 2.3 The four scheme `:root` blocks
+
+Drop one (and only one) into your stylesheet. Apply to `<html>` or `<body>`. The `data-scheme` attribute variants let you switch schemes per subtree, but in most cases you set one scheme for the whole page.
+
+```css
+/* ─────────────────────────────────────────────────────────────
+   SCHEME A — WARM   (default — editorial / premium quiet)
+   ───────────────────────────────────────────────────────────── */
+:root,
+:root[data-scheme="warm"] {
+  /* surface system */
+  --bg-top:           #FDFBF7;
+  --bg-bottom:        #EAE5DF;
+  --shell-1:          #FFFFFF;
+  --shell-2:          #FDFBF7;
+  --shell-3:          #DCD6CC;
+  --surface-base:     #FDFBF7;   /* use at /70 alpha for glass cards */
+  --surface-tinted:   #F5EFE5;   /* code block neutral */
+
+  /* accents */
+  --accent-primary:   #A3907A;   /* taupe */
+  --accent-secondary: #8C8273;
+  --tertiary:         #A1AE7A;   /* warm olive — live dots / success */
+
+  /* text */
+  --text-primary:     #2C2C2A;
+  --text-secondary:   #7A756D;
+  --text-muted:       #8C8273;
+  --text-placeholder: #A8A296;
+
+  /* atmosphere (RGB triplet — Canvas reads via getComputedStyle) */
+  --atmosphere-rgb:   163, 144, 122;
+
+  /* code block accent (label + icon color only — surface stays neutral) */
+  --code-error-accent:  #B55A3C;   /* muted warm-red on cream */
+
+  /* badge variants — bg / text / border per variant */
+  --badge-neutral-bg:     #F5EFE5; --badge-neutral-text:  #7A756D; --badge-neutral-border:  #DCD6CC;
+  --badge-required-bg:    #EFE7DD; --badge-required-text: #7A4F2E; --badge-required-border: #D4B797;
+  --badge-success-bg:     #E8EDD8; --badge-success-text:  #5E6B3A; --badge-success-border:  #BFC99A;
+  --badge-draft-bg:       #EDE9E1; --badge-draft-text:    #9A9388; --badge-draft-border:    #D8D2C5;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   SCHEME B — MIST   (cool blue-slate — engineering / B2B / fintech)
+   ───────────────────────────────────────────────────────────── */
+:root[data-scheme="mist"] {
+  --bg-top:           #F5F8FB;
+  --bg-bottom:        #E2E8EF;
+  --shell-1:          #FFFFFF;
+  --shell-2:          #F5F8FB;
+  --shell-3:          #CFD8E2;
+  --surface-base:     #F5F8FB;
+  --surface-tinted:   #EAF1F7;
+
+  --accent-primary:   #7E8FA4;   /* slate blue */
+  --accent-secondary: #5E6E83;
+  --tertiary:         #6FB0B5;   /* cool teal — live dots / success */
+
+  --text-primary:     #1E2530;
+  --text-secondary:   #5A6470;
+  --text-muted:       #828E9A;
+  --text-placeholder: #A5B0BC;
+
+  --atmosphere-rgb:   126, 143, 164;
+
+  --code-error-accent:  #8E4E5A;   /* muted cool-red on slate */
+
+  --badge-neutral-bg:     #EAF1F7; --badge-neutral-text:  #5A6470; --badge-neutral-border:  #CFD8E2;
+  --badge-required-bg:    #E1E8F0; --badge-required-text: #354F75; --badge-required-border: #B5C2D0;
+  --badge-success-bg:     #DDE8E3; --badge-success-text:  #2D5454; --badge-success-border:  #A6C7C8;
+  --badge-draft-bg:       #E5E8EC; --badge-draft-text:    #828E9A; --badge-draft-border:    #C8CDD3;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   SCHEME C — SAGE   (sage green-grey — wellness / AI companion / organic)
+   ───────────────────────────────────────────────────────────── */
+:root[data-scheme="sage"] {
+  --bg-top:           #F3F4EE;
+  --bg-bottom:        #E2E6DA;
+  --shell-1:          #FFFFFF;
+  --shell-2:          #F3F4EE;
+  --shell-3:          #CFD3C3;
+  --surface-base:     #F3F4EE;
+  --surface-tinted:   #EAEDE0;
+
+  --accent-primary:   #7A8A6D;   /* sage green */
+  --accent-secondary: #5E6E53;
+  --tertiary:         #C49E5C;   /* warm amber — complement to green */
+
+  --text-primary:     #2A2E27;
+  --text-secondary:   #5E6B5A;
+  --text-muted:       #8B948A;
+  --text-placeholder: #ABB3A7;
+
+  --atmosphere-rgb:   122, 138, 109;
+
+  --code-error-accent:  #9A5739;   /* muted rust on sage */
+
+  --badge-neutral-bg:     #EAEDE0; --badge-neutral-text:  #5E6B5A; --badge-neutral-border:  #CFD3C3;
+  --badge-required-bg:    #E5E8D6; --badge-required-text: #4A5A38; --badge-required-border: #B5BEA0;
+  --badge-success-bg:     #DDE6CC; --badge-success-text:  #3E4E2A; --badge-success-border:  #A8B68F;
+  --badge-draft-bg:       #E8EAE0; --badge-draft-text:    #8B948A; --badge-draft-border:    #CCD0C2;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   SCHEME D — PEARL   (near-pure + cool greige — luxury / banking / formal)
+   ───────────────────────────────────────────────────────────── */
+:root[data-scheme="pearl"] {
+  --bg-top:           #FAFAF8;
+  --bg-bottom:        #ECECE7;
+  --shell-1:          #FFFFFF;
+  --shell-2:          #FAFAF8;
+  --shell-3:          #DCDCD7;
+  --surface-base:     #FAFAF8;
+  --surface-tinted:   #F2F2EE;
+
+  --accent-primary:   #8A8478;   /* cool greige */
+  --accent-secondary: #6E695F;
+  --tertiary:         #B5A589;   /* champagne — adds warmth to cool base */
+
+  --text-primary:     #1F1F1D;
+  --text-secondary:   #5C5A55;
+  --text-muted:       #8B8A84;
+  --text-placeholder: #B0AFA9;
+
+  --atmosphere-rgb:   138, 132, 120;
+
+  --code-error-accent:  #8C5A4C;   /* muted warm-greige red on pearl */
+
+  --badge-neutral-bg:     #F2F2EE; --badge-neutral-text:  #5C5A55; --badge-neutral-border:  #DCDCD7;
+  --badge-required-bg:    #EDE8DF; --badge-required-text: #6F5C3F; --badge-required-border: #C8BFA8;
+  --badge-success-bg:     #E7E9DF; --badge-success-text:  #595E4A; --badge-success-border:  #B8BDA8;
+  --badge-draft-bg:       #E8E8E3; --badge-draft-text:    #8B8A84; --badge-draft-border:    #D2D2CC;
+}
+```
+
+### 2.4 Usage rules (constant across all schemes)
+
+- **`--accent-primary`** — main accent. Atmosphere nodes, hover highlights, one or two single-word emphasis moments per page. **Not a fill color** for large surfaces.
+- **`--tertiary`** — live-state dots (online, active, processing), success badges, "now playing" indicators. Tertiary is the scheme's complement, NOT the scheme's primary deeper-shifted.
+- **`--bg-bottom` / `--bg-top`** — required gradient. **Never use `bg-white` or any pure flat color at the page level.**
+- **`--text-primary`** at full weight is the readable default. `--text-secondary` for captions and metadata. `--text-muted` for tertiary metadata (dates, ID prefixes, "modified X ago").
+- **Mixing tokens from two schemes is forbidden** — commit to one scheme per page.
+
+### 2.5 Required page gradients (Tailwind syntax using var())
+
+One MUST be applied at the page root:
+
+```text
+bg-gradient-to-b from-[var(--bg-top)] to-[var(--bg-bottom)]                    # default page bg
+bg-gradient-to-b from-[var(--shell-1)] to-[var(--shell-3)]                     # high-contrast hero bg
+bg-gradient-to-b from-[var(--shell-1)] to-[var(--bg-bottom)]                   # mid-density section bg
+```
+
+---
+
+## 3. Typography
+
+Three voices: **Fraunces** (editorial serif display), **Geist** (geometric sans for body / UI chrome), **Geist Mono** (monospace for IDs / timestamps / code). For CJK content, the system pairs **Noto Serif SC** with **MiSans** + **Sarasa Mono SC** as monospace fallback — all open-source designer-grade typefaces matching the editorial mood of their Latin counterparts.
+
+### Type scale (use these tokens — do NOT invent new font-sizes)
+
+All display / heading tokens use `clamp(min, vw, max)` so they scale fluidly between mobile and desktop. Body and metadata tokens stay fixed — they are designed to read at a single size. **Inventing a one-off `text-[28px]` or `text-[22px]` is forbidden** — use the nearest token instead.
+
+```yaml
+# DISPLAY — hero / page-level titles. Fraunces, extra-light, uppercase (Latin) or letter-spaced (CJK).
+display-xl:                                # huge poster moments (campaign pages, manifestos)
+  fontFamily:         "Fraunces, 'Noto Serif SC', 'Source Han Serif SC', serif"
+  fontSize:           "clamp(80px, 12vw, 144px)"
+  fontWeight:         200
+  lineHeight:         "0.95"
+  letterSpacing:      "-0.03em"            # CJK variant: 0.08em, no negative
+  textTransform:      "uppercase"          # no-op for CJK
+  fontVariationSettings: "'opsz' 144, 'SOFT' 50"
+
+display-lg:                                # default hero title (most landing pages)
+  fontFamily:         "Fraunces, 'Noto Serif SC', 'Source Han Serif SC', serif"
+  fontSize:           "clamp(56px, 8vw, 96px)"
+  fontWeight:         200
+  lineHeight:         "1"
+  letterSpacing:      "-0.025em"           # CJK variant: 0.08em
+  textTransform:      "uppercase"          # no-op for CJK
+  fontVariationSettings: "'opsz' 144, 'SOFT' 50"
+
+display-md:                                # internal page titles (dashboard / library / digest pages)
+  fontFamily:         "Fraunces, 'Noto Serif SC', 'Source Han Serif SC', serif"
+  fontSize:           "clamp(36px, 5vw, 56px)"
+  fontWeight:         300
+  lineHeight:         "1.05"
+  letterSpacing:      "-0.02em"            # CJK variant: 0.04em
+
+# HEADING — section + card titles. Fraunces light for sections, Geist medium for cards.
+heading-section:                           # h2 — section dividers on a page
+  fontFamily:         "Fraunces, 'Noto Serif SC', serif"
+  fontSize:           "clamp(28px, 3.5vw, 40px)"
+  fontWeight:         300
+  lineHeight:         "1.1"
+  letterSpacing:      "-0.015em"
+
+heading-card:                              # title inside a card (rule name, feature name, etc.)
+  fontFamily:         "'Geist', 'MiSans', 'PingFang SC', sans-serif"
+  fontSize:           "18px"
+  fontWeight:         500
+  lineHeight:         "24px"
+  letterSpacing:      "-0.005em"
+
+# BODY — short captions vs. long-form reading. Different leading.
+body-md:                                   # short body, captions inside cards/chips
+  fontFamily:         "'Geist', 'MiSans', 'PingFang SC', 'Microsoft YaHei', sans-serif"
+  fontSize:           "12px"
+  fontWeight:         400                  # CJK at 12px needs ≥400 for legibility
+  lineHeight:         "18px"
+
+body-reading:                              # long-form prose (article body, rule explanations, etc.)
+  fontFamily:         "'Geist', 'MiSans', 'PingFang SC', 'Microsoft YaHei', sans-serif"
+  fontSize:           "15px"
+  fontWeight:         400
+  lineHeight:         "1.7"                # CJK content bumps to 1.8 via :lang(zh) selector
+  letterSpacing:      "0"
+  # paragraph spacing: p + p { margin-top: 1.25em }  (CJK: 1.5em)
+
+# LABELS + METADATA
+label-md:                                  # button text, badge labels, nav items, form labels
+  fontFamily:         "'Geist', 'MiSans', 'PingFang SC', sans-serif"
+  fontSize:           "14px"
+  fontWeight:         400
+  lineHeight:         "20px"
+
+mono-meta:                                 # monospaced IDs (R-014), timestamps (2 days ago), file paths, hex codes
+  fontFamily:         "'Geist Mono', 'JetBrains Mono', 'Sarasa Mono SC', ui-monospace, monospace"
+  fontSize:           "11px"
+  fontWeight:         400
+  lineHeight:         "16px"
+  letterSpacing:      "0.03em"
+  textTransform:      "uppercase"          # optional — use for IDs and status, skip for timestamps
+```
+
+**Tailwind translation cheat-sheet** (so AI doesn't have to compute classnames):
+
+```text
+display-xl       text-[clamp(80px,12vw,144px)] leading-[0.95] tracking-[-0.03em] font-extralight uppercase
+display-lg       text-[clamp(56px,8vw,96px)]   leading-none   tracking-[-0.025em] font-extralight uppercase
+display-md       text-[clamp(36px,5vw,56px)]   leading-[1.05] tracking-[-0.02em]  font-light
+heading-section  text-[clamp(28px,3.5vw,40px)] leading-tight  tracking-[-0.015em] font-light
+heading-card     text-[18px] leading-6 font-medium tracking-[-0.005em]
+body-reading     text-[15px] leading-[1.7] font-normal
+body-md          text-[12px] leading-[18px] font-normal
+label-md         text-[14px] leading-5 font-normal
+mono-meta        text-[11px] leading-4 tracking-[0.03em] font-mono uppercase
+```
+
+### Font CDN (always include in head)
+
+```html
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,200;9..144,300;9..144,500&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@200;300;400&display=swap" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/misans@4.0.0/lib/MiSans-Normal.min.css" rel="stylesheet" />
+```
+
+### Mixed Latin + CJK
+
+Browsers select fonts **per-character**, so a single `font-family` declaration like `"Fraunces, 'Noto Serif SC', serif"` will render English with Fraunces and Chinese with Noto Serif SC in the same paragraph, automatically. Do NOT use JS to detect language and swap font families — let the cascade do its job.
+
+For a hero title in **pure Chinese** (no Latin chars), `text-transform: uppercase` is a no-op. To preserve the "ceremonial wide" mood, switch to `letter-spacing: 0.08em` for the Chinese variant. Also **do not apply the Latin negative letter-spacing to Chinese** — it crushes 方块字 into each other.
+
+```jsx
+{/* pure-Chinese display title — use tracking-wider instead of uppercase, no negative tracking */}
+<h1
+  className="text-[clamp(56px,8vw,96px)] leading-none font-extralight tracking-[0.08em]"
+  style={{
+    fontFamily: "'Noto Serif SC', 'Source Han Serif SC', serif",
+    fontVariationSettings: "'wght' 200",
+  }}
+>
+  代码秩序回归
+</h1>
+```
+
+### Long-form CJK reading
+
+When a page contains more than a short caption of Chinese prose (rule explanations, article body, weekly digest writeup), apply `body-reading` plus the CJK density adjustments:
+
+```css
+/* CSS — apply to the prose container */
+:lang(zh) .body-reading,
+.prose-cjk {
+  line-height: 1.8;           /* +0.1 vs Latin */
+  letter-spacing: 0.02em;     /* tiny positive tracking for screen readability */
+}
+:lang(zh) .body-reading p + p,
+.prose-cjk p + p {
+  margin-top: 1.5em;          /* +0.25em vs Latin */
+}
+```
+
+Latin-only prose can stay at `1.7` line-height and `1.25em` paragraph spacing.
+
+---
+
+## 4. Required Recipes (MUST USE — copy verbatim)
+
+Every output that uses this system **must** include all signature recipes below. AI implementations frequently skip these because the visual signature lives in the recipes, not in the tokens. **Do not output a layout that omits any of these.**
+
+### Recipe 1 — Page Shell (REQUIRED at root)
+
+The outermost wrapper of any page **must** apply the scheme's warm gradient. A flat `bg-white` or any hardcoded hex bg is **not acceptable**.
+
+```jsx
+{/* Apply the scheme on <html> or <body> first; e.g. <html data-scheme="warm"> */}
+<main className="min-h-screen bg-gradient-to-b from-[var(--bg-top)] to-[var(--bg-bottom)] text-[var(--text-primary)]">
+  {/* every page-level child goes here */}
+</main>
+```
+
+### Recipe 2 — Gradient Border Shell + Glass Surface (REQUIRED for ALL cards, chips, primary buttons)
+
+This is the single most important visual signature of the system. **Every** content card, info chip, and primary button **must** be wrapped in this exact two-layer structure: an outer shell with the gradient border, and an inner glass surface with the inset highlight shadow.
+
+```jsx
+<div
+  className="rounded-[6px] p-[1px]"
+  style={{ background: 'linear-gradient(to bottom, var(--shell-1), var(--shell-2), var(--shell-3))' }}
+>
+  <div
+    className="rounded-[5px] backdrop-blur-[12px] p-4"
+    style={{
+      background: 'color-mix(in srgb, var(--surface-base) 70%, transparent)',
+      boxShadow:
+        'inset 0 1px 0 0 rgb(255,255,255), inset 0 -1px 1px 0 rgba(0,0,0,0.02), 0 1px 2px 0 rgba(0,0,0,0.05)',
+    }}
+  >
+    {/* card content here */}
+  </div>
+</div>
+```
+
+The two layers are **not optional decoration** — they are the system's identity. The outer 1px gradient padding is what reads as "premium hairline edge". The `inset 0 1px 0 0 rgb(255,255,255)` is the white top-light highlight that gives surfaces their slight skeuomorphic lift. The white inset is **constant across all schemes** — it's a system-level technique, not a tint.
+
+> **Tailwind shorthand** (if you prefer not to drop inline styles): `bg-[color-mix(in_srgb,var(--surface-base)_70%,transparent)]` works in Tailwind v3.4+ with JIT.
+
+### Recipe 3 — Floating Info Chip
+
+Smaller variant of the same recipe. Used for hero corner badges (e.g., "Drift detected today · 14"), inline status indicators, metric pills.
+
+```jsx
+<div
+  className="rounded-[6px] p-[1px]"
+  style={{ background: 'linear-gradient(to bottom, var(--shell-1), var(--shell-2), var(--shell-3))' }}
+>
+  <div
+    className="rounded-[5px] backdrop-blur-[12px] px-3 py-2 flex items-center gap-2"
+    style={{
+      background: 'color-mix(in srgb, var(--surface-base) 80%, transparent)',
+      boxShadow: 'inset 0 1px 0 0 rgb(255,255,255), 0 1px 2px 0 rgba(0,0,0,0.05)',
+    }}
+  >
+    {/* live dot uses scheme tertiary — automatically re-tints across schemes */}
+    <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--tertiary)' }} />
+    <span className="text-[12px] font-light text-[var(--text-secondary)]">Label</span>
+    <span className="text-[14px] font-normal text-[var(--text-primary)] tabular-nums">Value</span>
+  </div>
+</div>
+```
+
+### Recipe 4 — Primary Button (light glass, NOT dark fill)
+
+The primary CTA in this system is **a light glass surface with dark text**, not a dark filled button. This is a deliberate inversion of the conventional SaaS pattern. Reuse Recipe 2's shell.
+
+```jsx
+<button
+  className="rounded-[6px] p-[1px] transition hover:brightness-[0.98]"
+  style={{ background: 'linear-gradient(to bottom, var(--shell-1), var(--shell-2), var(--shell-3))' }}
+>
+  <span
+    className="flex items-center gap-2 rounded-[5px] backdrop-blur-[12px] px-[14px] py-[10px] text-[14px] font-light text-[var(--text-primary)]"
+    style={{
+      background: 'color-mix(in srgb, var(--surface-base) 80%, transparent)',
+      boxShadow: 'inset 0 1px 0 0 rgb(255,255,255), 0 1px 2px 0 rgba(0,0,0,0.05)',
+    }}
+  >
+    Start Free Trial
+    <span aria-hidden>→</span>
+  </span>
+</button>
+```
+
+Recipe 4 is the **default** primary button — use it for most CTAs (Start Free Trial, Read the Spec, Save, Cancel, etc.). For the **singular, most-important action on a page**, use Recipe 4b below.
+
+### Recipe 4b — Emphasis Primary (one per page maximum)
+
+Use this **only for the one most-important call-to-action on the page** — typically the "create new" / "sign up" / "publish" / "checkout" button that should clearly stand above all other actions. Inverts polarity to a dark filled surface with the scheme's near-black text color (`--text-primary`) and pale text on top (`--bg-top`). The inset white highlight is **preserved** — it's what keeps the dark button readable as part of this glass system rather than a flat slab.
+
+```jsx
+<button
+  className="inline-flex items-center gap-2 rounded-[5px] px-[14px] py-[10px] text-[14px] font-normal transition hover:brightness-110"
+  style={{
+    background: 'var(--text-primary)',
+    color: 'var(--bg-top)',
+    boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.10), 0 1px 2px 0 rgba(0,0,0,0.15)',
+  }}
+>
+  <span aria-hidden>+</span>
+  New Rule
+</button>
+```
+
+**Rules:**
+
+- **One per page**, no more. Two emphasis buttons on the same page negate each other and the page reads as undisciplined.
+- This is the **only place** dark-fill is allowed in the system. Everywhere else, light glass.
+- The inset highlight `inset 0 1px 0 0 rgba(255,255,255,0.10)` is critical — it keeps the dark button feeling like part of the glass family. Without it the button reads as a different design system entirely.
+- Use the scheme's `--text-primary` (not pure `#000`) — each scheme has a slightly different near-black that harmonizes with the page tint (warm graphite in WARM, cool ink in MIST, deep moss in SAGE, near-black in PEARL).
+
+If you find yourself wanting **two** dark buttons on the same page, the second one should downgrade to Recipe 4 (light glass).
+
+### Recipe 5 — Text Link (secondary action)
+
+```jsx
+<a
+  href="#"
+  className="text-[14px] font-normal underline underline-offset-4 text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+  style={{ textDecorationColor: 'var(--shell-3)' }}
+>
+  Read the Spec
+</a>
+```
+
+### Recipe 6 — Hero Atmosphere Layer (REQUIRED behind every hero, MUST animate)
+
+A bare gradient background **is not enough**. Every hero section must have an **animated** atmospheric layer behind the content. **The motion is the point** — nodes must drift in position, and connecting lines must fade in/out dynamically as distances change. Use Canvas + `requestAnimationFrame` for smoothness. Do **not** substitute a static SVG. SVG SMIL `<animate>` tags are frequently dropped during AI generation; Canvas RAF loops survive because the JS structure is tightly coupled.
+
+```jsx
+import { useEffect, useRef } from "react"
+
+function HeroAtmosphere() {
+  const canvasRef = useRef(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext("2d")
+    const dpr = window.devicePixelRatio || 1
+
+    // Read scheme's atmosphere color from CSS variable — re-tints automatically across schemes.
+    const rgb = getComputedStyle(document.documentElement)
+      .getPropertyValue("--atmosphere-rgb")
+      .trim() || "163, 144, 122"  // fallback to WARM
+
+    const resize = () => {
+      const { offsetWidth: w, offsetHeight: h } = canvas
+      canvas.width = w * dpr
+      canvas.height = h * dpr
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+    }
+    resize()
+    window.addEventListener("resize", resize)
+
+    const NODE_COUNT = 44
+    const CONNECT_DIST = 150
+    // CRITICAL: positions are NORMALIZED (0..1), not pixel-space.
+    // Real pixel coordinates are computed each frame as nx * canvas.offsetWidth.
+    // Why: if this effect runs BEFORE the canvas has been laid out (offsetWidth = 0),
+    // pixel-space init would cluster all nodes in the top-left corner. Normalized
+    // positions are immune to that race condition — they're always spread 0..1.
+    const nodes = Array.from({ length: NODE_COUNT }, () => ({
+      nx:  Math.random(),                       // 0..1
+      ny:  Math.random(),                       // 0..1
+      vnx: (Math.random() - 0.5) * 0.0006,      // normalized velocity (≈ 0.9 px/frame at 1500px wide)
+      vny: (Math.random() - 0.5) * 0.0006,
+      r:   1 + Math.random() * 1.4,
+    }))
+
+    let raf
+    const tick = () => {
+      const w = canvas.offsetWidth
+      const h = canvas.offsetHeight
+      ctx.clearRect(0, 0, w, h)
+
+      // Drift in normalized space — soft wall-bounce at 0 and 1.
+      for (const n of nodes) {
+        n.nx += n.vnx
+        n.ny += n.vny
+        if (n.nx < 0 || n.nx > 1) n.vnx *= -1
+        if (n.ny < 0 || n.ny > 1) n.vny *= -1
+      }
+
+      // Project to pixel coordinates THIS frame (uses up-to-date w/h).
+      const points = nodes.map((n) => ({ x: n.nx * w, y: n.ny * h, r: n.r }))
+
+      ctx.lineWidth = 0.5
+      for (let i = 0; i < points.length; i++) {
+        for (let j = i + 1; j < points.length; j++) {
+          const dx = points[i].x - points[j].x
+          const dy = points[i].y - points[j].y
+          const d = Math.hypot(dx, dy)
+          if (d < CONNECT_DIST) {
+            ctx.strokeStyle = `rgba(${rgb}, ${0.35 * (1 - d / CONNECT_DIST)})`
+            ctx.beginPath()
+            ctx.moveTo(points[i].x, points[i].y)
+            ctx.lineTo(points[j].x, points[j].y)
+            ctx.stroke()
+          }
+        }
+      }
+
+      ctx.fillStyle = `rgba(${rgb}, 0.55)`
+      for (const p of points) {
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
+        ctx.fill()
+      }
+
+      raf = requestAnimationFrame(tick)
+    }
+    tick()
+
+    return () => {
+      cancelAnimationFrame(raf)
+      window.removeEventListener("resize", resize)
+    }
+  }, [])
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full pointer-events-none"
+      aria-hidden
+    />
+  )
+}
+```
+
+**Tuning notes (do not change without reason):**
+
+- `NODE_COUNT = 44` — fewer than 30 looks empty, more than 60 looks busy.
+- Normalized velocity `±0.0006/frame` — at a 1500px-wide canvas this projects to ~0.9 px/frame, the "quiet drift" speed. Faster looks anxious; slower looks frozen.
+- `CONNECT_DIST = 150` (pixels) — at default viewport, gives ~2–4 connections per node, the right density.
+- Color — read from `--atmosphere-rgb` CSS variable so the constellation auto-tints across all four schemes. **Never hardcode an RGB.**
+
+> **Why normalized positions (the historical bug this fixes):** earlier versions of this recipe used pixel-space `Math.random() * canvas.offsetWidth` at init time. If the Canvas hadn't been laid out yet (very common in React effects), `offsetWidth` was `0` and all 44 nodes spawned clustered in the top-left corner. Even after `resize()` corrected the canvas dimensions, the nodes were stuck. Normalized 0..1 positions are immune — projection happens fresh every frame against the live `offsetWidth`/`offsetHeight`. **Do not revert this to pixel-space.**
+
+### Recipe 7 — Hero Composition (chips MUST overlap, NOT stack above)
+
+The corner info chips are **part of the hero composition**, not a separate row above it. They must be absolutely positioned over the hero so they visually break into the title's space. A chip sitting cleanly on its own row above the title is **wrong** for this system.
+
+```jsx
+<section className="relative overflow-hidden px-6 pt-32 pb-16">
+  <HeroAtmosphere />
+
+  {/* Floating chips — absolutely positioned, MUST overlap the hero block */}
+  <div className="absolute top-[20%] left-[12%] z-20">
+    <Chip dot label="Drift detected today" value="14" />
+  </div>
+  <div className="absolute top-[38%] right-[10%] z-20">
+    <Chip dot label="Avg. PR review" value="2.3 min" />
+  </div>
+
+  {/* Hero content */}
+  <div className="relative z-10 max-w-[960px] mx-auto text-center">
+    <h1
+      className="font-[Fraunces] text-[clamp(56px,8vw,96px)] leading-none font-extralight uppercase tracking-[-0.025em] text-[var(--text-primary)]"
+      style={{ fontVariationSettings: "'opsz' 144, 'SOFT' 50" }}
+    >
+      Controlled Generation
+    </h1>
+    <p className="mt-5 text-[12px] font-light text-[var(--text-secondary)] leading-4 max-w-[420px] mx-auto">
+      AI coding governance for Tech Leads. Audit, rollback, and constrain every line.
+    </p>
+    <div className="mt-9 flex items-center justify-center gap-5">
+      {/* primary button (Recipe 4) + text link (Recipe 5) */}
+    </div>
+  </div>
+</section>
+```
+
+The `mt-5` (20px) between title and subtitle, and `mt-9` (36px) between subtitle and CTA row, are **not arbitrary** — they enforce the dense vertical rhythm specified in §5 below.
+
+### Recipe 8 — Cards in a Grid (equal-height with bottom-anchored metadata)
+
+When cards are placed side-by-side in a grid (`grid-cols-2`, `grid-cols-3`), CSS Grid stretches them to equal heights — but if the inner content has fixed height, the gradient shell shows visible **dead space below the content**. Fix it with `h-full flex flex-col` on the inner surface and `mt-auto` on the bottom metadata row. This is the recipe to use any time multiple cards share a row.
+
+```jsx
+<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+  {items.map((item) => (
+    <div
+      key={item.id}
+      className="rounded-[6px] p-[1px]"
+      style={{ background: 'linear-gradient(to bottom, var(--shell-1), var(--shell-2), var(--shell-3))' }}
+    >
+      <div
+        className="h-full rounded-[5px] backdrop-blur-[12px] p-5 flex flex-col"
+        style={{
+          background: 'color-mix(in srgb, var(--surface-base) 70%, transparent)',
+          boxShadow:
+            'inset 0 1px 0 0 rgb(255,255,255), inset 0 -1px 1px 0 rgba(0,0,0,0.02), 0 1px 2px 0 rgba(0,0,0,0.05)',
+        }}
+      >
+        {/* badges row (fixed height) */}
+        <div className="flex items-center gap-2 mb-3">{/* badges */}</div>
+
+        {/* card title — heading-card */}
+        <h3 className="text-[18px] leading-6 font-medium tracking-[-0.005em] text-[var(--text-primary)] mb-2">
+          {item.title}
+        </h3>
+
+        {/* description — body-md, may vary in length between cards */}
+        <p className="text-[12px] leading-[18px] text-[var(--text-secondary)] mb-3">{item.desc}</p>
+
+        {/* arbitrary middle content (code blocks, lists, etc.) */}
+        <div className="mb-4">{item.body}</div>
+
+        {/* metadata — mt-auto pushes this to the bottom of the stretched card */}
+        <div className="mt-auto pt-3 flex items-center justify-between text-[11px] font-mono tracking-[0.03em] text-[var(--text-muted)]">
+          <span>{item.modified}</span>
+          <span>{item.triggered}</span>
+        </div>
+      </div>
+    </div>
+  ))}
+</div>
+```
+
+**Critical bits — failure modes when these are missing:**
+
+- `h-full` on the **inner** surface — without this, the gradient shell stretches but the inner glass surface does not, leaving the dark gradient bleeding through the bottom of shorter cards.
+- `flex flex-col` on the inner surface — required so `mt-auto` works on the metadata row.
+- `mt-auto` on the metadata row — pushes it to the bottom so taller siblings don't leave a void below it.
+- The grid container itself does **not** need `auto-rows-fr` if you use this pattern; `align-items: stretch` (the default) plus `h-full` already aligns the surfaces.
+
+When cards should **not** stretch (e.g., a single column of cards with naturally varying heights), drop the grid `align-items: stretch` and remove `h-full`. Use stretch only when there are multiple cards visible side-by-side.
+
+### Recipe 9 — Code Block (inline, light tint, NOT dark slate)
+
+Code blocks **must stay inside the warm cream system**. Default Tailwind / GitHub-style dark slate or pure black backgrounds are wrong — they punch a hole through the lightmorphism mood. Use a soft warm-tinted surface with mono text, and reuse the same gradient shell wrapper.
+
+Three tint variants for semantic comparisons:
+
+**Visual rule — all variants share the same surface.** Earlier versions of this recipe used cross-hue background washes (cream → red, cream → green) to mark error/success state. Those washes look fine in WARM scheme but read as **muddy / dirty** in MIST / SAGE / PEARL because the hue jumps from cool to warm or vice versa across one panel. Don't do that. **The background is the same `--surface-tinted` for all three variants** — semantic state lives in the label + icon, not the bg.
+
+```jsx
+function CodeBlock({ children, label, variant = 'neutral' }) {
+  // All variants share the same background — same volumetric / glass feel as Recipe 2 cards.
+  // Variant state shows up only in the label color and the leading icon.
+  const variantAccent = {
+    neutral: { color: 'var(--text-muted)',          icon: null },
+    error:   { color: 'var(--code-error-accent)',   icon: '✗' },
+    success: { color: 'var(--tertiary)',            icon: '✓' },
+  }[variant]
+
+  return (
+    <div
+      className="rounded-[6px] p-[1px]"
+      style={{ background: 'linear-gradient(to bottom, var(--shell-1), var(--shell-2), var(--shell-3))' }}
+    >
+      <div
+        className="rounded-[5px] backdrop-blur-[8px] p-3"
+        style={{
+          background: 'color-mix(in srgb, var(--surface-tinted) 90%, transparent)',
+          boxShadow: 'inset 0 1px 0 0 rgb(255,255,255), 0 1px 2px 0 rgba(0,0,0,0.04)',
+        }}
+      >
+        {label && (
+          <div
+            className="text-[11px] font-mono uppercase tracking-[0.05em] mb-2 flex items-center gap-1.5"
+            style={{ color: variantAccent.color }}
+          >
+            {variantAccent.icon && <span aria-hidden>{variantAccent.icon}</span>}
+            <span>{label}</span>
+          </div>
+        )}
+        <pre className="text-[12px] leading-[18px] font-mono text-[var(--text-primary)] whitespace-pre overflow-x-auto">
+          {children}
+        </pre>
+      </div>
+    </div>
+  )
+}
+```
+
+- `neutral` for standalone snippets — label in muted text color, no icon.
+- `error` for "wrong / 错误示例" — label uses `--code-error-accent` (muted warm-red, tuned per scheme so it harmonizes with the page tint) + leading ✗ icon.
+- `success` for "correct / 正确示例" — label uses `--tertiary` (the scheme's complement hue) + leading ✓ icon.
+
+Across all schemes, the code block surface looks visually identical to Recipe 2 cards. **No cross-hue gradients on the body** — that's the failure mode you're avoiding here.
+
+**Never** use `bg-[#0D1117]`, `bg-slate-900`, `bg-gray-900`, `bg-black`, or any forest-green / blood-red code block treatment. Those belong to a different system.
+
+### Recipe 10 — Form Inputs (search field + select / dropdown)
+
+The system **does not have a "default Tailwind input"**. Every input field is a glass surface with the gradient shell. The focus state is a thicker shell, NOT a blue ring. Reuse Recipe 2's two-layer wrapper.
+
+```jsx
+// Text input / search field
+<div
+  className="rounded-[6px] p-[1px] transition-colors"
+  style={{
+    background: 'linear-gradient(to bottom, var(--shell-1), var(--shell-2), var(--shell-3))',
+    // Focus state: gradient shifts to the scheme's accent (handled via :focus-within in companion CSS — see below)
+  }}
+>
+  <div
+    className="rounded-[5px] backdrop-blur-[12px] flex items-center gap-2 px-3 py-2"
+    style={{
+      background: 'color-mix(in srgb, var(--surface-base) 70%, transparent)',
+      boxShadow: 'inset 0 1px 0 0 rgb(255,255,255), 0 1px 2px 0 rgba(0,0,0,0.05)',
+    }}
+  >
+    <SearchIcon className="w-4 h-4 text-[var(--text-muted)]" />
+    <input
+      type="text"
+      placeholder="Search rules…"
+      className="flex-1 bg-transparent outline-none text-[14px] text-[var(--text-primary)] placeholder:text-[var(--text-placeholder)]"
+    />
+  </div>
+</div>
+
+// Companion CSS — drop into your stylesheet to get the focus shell color-shift.
+// Tailwind arbitrary :focus-within with CSS-var values is tricky, so this is cleaner:
+/*
+  .lightmorphism-input:focus-within {
+    background: linear-gradient(to bottom, var(--shell-3), color-mix(in srgb, var(--accent-primary) 40%, transparent), var(--accent-primary));
+  }
+*/
+
+// Select / dropdown
+<div
+  className="rounded-[6px] p-[1px]"
+  style={{ background: 'linear-gradient(to bottom, var(--shell-1), var(--shell-2), var(--shell-3))' }}
+>
+  <select
+    className="rounded-[5px] backdrop-blur-[12px] appearance-none px-3 py-2 pr-8 text-[14px] text-[var(--text-primary)] outline-none cursor-pointer w-full"
+    style={{
+      background: 'color-mix(in srgb, var(--surface-base) 70%, transparent)',
+      boxShadow: 'inset 0 1px 0 0 rgb(255,255,255), 0 1px 2px 0 rgba(0,0,0,0.05)',
+      // Inline SVG chevron — currentColor doesn't work in url(), but the medium-grey
+      // %238C8273 reads well across all four schemes since they all use warm-mid greys.
+      // If you want strict per-scheme chevron color, render the SVG as a sibling element.
+      backgroundImage: "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%238C8273'><path d='M5.516 7.548L10 12.032l4.484-4.484-1.06-1.06L10 9.911 6.576 6.487z'/></svg>\")",
+      backgroundRepeat: 'no-repeat',
+      backgroundPosition: 'right 8px center',
+      backgroundSize: '16px',
+    }}
+  >
+    <option>全部分类</option>
+    <option>naming</option>
+    <option>formatting</option>
+  </select>
+</div>
+```
+
+**Don't use:**
+
+- `border` / `border-gray-300` — there are no flat borders in this system.
+- `focus:ring-2 focus:ring-blue-500` — the focus state is a gradient-shell color shift to the scheme's `--accent-primary`, not a blue ring.
+- Browser-default select chevron — replace it with an inline SVG arrow as shown.
+
+### Recipe 11 — Status Badge (3 semantic variants)
+
+For status, severity, category, and other small metadata pills. Smaller than Recipe 3 (Floating Info Chip) and meant to sit inline next to titles. Three variants distinguish semantic states without leaving the warm palette.
+
+```jsx
+function Badge({ children, variant = 'neutral' }) {
+  // Each variant maps to scheme CSS variables so badges auto-tint when the scheme changes.
+  const variantStyle = {
+    neutral:  { background: 'var(--badge-neutral-bg)',  color: 'var(--badge-neutral-text)',  borderColor: 'var(--badge-neutral-border)' },
+    required: { background: 'var(--badge-required-bg)', color: 'var(--badge-required-text)', borderColor: 'var(--badge-required-border)' },
+    success:  { background: 'var(--badge-success-bg)',  color: 'var(--badge-success-text)',  borderColor: 'var(--badge-success-border)' },
+    draft:    { background: 'var(--badge-draft-bg)',    color: 'var(--badge-draft-text)',    borderColor: 'var(--badge-draft-border)' },
+  }[variant]
+
+  return (
+    <span
+      className="inline-flex items-center px-2 py-0.5 rounded-[3px] text-[11px] font-mono uppercase tracking-[0.03em] border"
+      style={{ ...variantStyle, boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.6)' }}
+    >
+      {children}
+    </span>
+  )
+}
+```
+
+Badges use `rounded-[3px]` (smaller than card 5px) and `border` — they are the **only** place a 1px solid border is allowed instead of the gradient shell. This is because badges are too small for the gradient to render meaningfully.
+
+Color guide (variant → scheme-aware tint):
+- `neutral` — generic categories (naming, formatting, architecture). Uses `--badge-neutral-*` (the active scheme's softest tint family).
+- `required` — required / mandatory state. Uses `--badge-required-*` (the active scheme's primary-accent undertone — warm taupe in WARM, slate blue in MIST, sage green in SAGE, greige in PEARL).
+- `success` — active / passing / live state. Uses `--badge-success-*` (the active scheme's tertiary undertone).
+- `draft` — draft / pending / deprecated state. Uses `--badge-draft-*` (the active scheme's muted neutral).
+
+**Never** use bright green (`bg-green-500`), bright red (`bg-red-500`), or blue (`bg-blue-500`) for badge variants. Map all status semantics into the four scheme-tinted variants above so badges re-tint when the page's scheme changes.
+
+---
+
+## 5. Layout
+
+Layout follows a grid composition with reusable spacing tokens. Preserve the grid + full-bleed structural frame before changing ornament. Use 4px as the base rhythm.
+
+- **Layout type:** Grid
+- **Content width:** Full Bleed (no narrow centered columns; let content breathe to viewport edges with section padding only)
+- **Base unit:** 4px
+- **Scale:** 1, 4, 8, 10, 12, 14, 16, 20 (px)
+- **Section padding (internal):** 24px, 56px
+- **Card padding:** 8px, 12px, 16px, 18px
+- **Gaps:** 6px, 8px, 12px, 16px
+
+### Composition Density (HARD RULES — most common failure mode)
+
+This system reads as **dense and editorial**, not a spacious SaaS landing page. Generic AI output tends to leave 100–200px of vertical air between sections; that immediately exits this style.
+
+- **Section-to-section gap:** **48–80px max.** Never exceed 80px of vertical empty space between two adjacent sections.
+- **Hero internal rhythm:**
+  - chips overlap title (Recipe 7), do NOT stack above
+  - title → subtitle: **16–24px** (`mt-4` to `mt-6`)
+  - subtitle → CTA row: **32–40px** (`mt-8` to `mt-10`)
+  - CTA row → end of hero section: **48–64px** (`pb-12` to `pb-16`)
+- **Hero must not end on empty air:** the next section's top edge should be ≤80px below the bottom of the hero CTA.
+- **Components allowed to break out:** full-bleed component mockups, large data displays, or feature illustrations may **overlap** between adjacent sections. Embrace the overlap; do not snap everything to clean horizontal divisions.
+- **No empty section backgrounds:** every section occupying more than 50vh **must** have either an atmosphere layer (Recipe 6 for hero), a content card, or a gradient transition — never a plain flat color across that much area.
+
+---
+
+## 6. Elevation & Depth
+
+Depth comes from **glass + hairline gradient edge + inset highlight** — not from heavy drop shadows.
+
+- **Surface style:** Glass (always with `backdrop-blur-[12px]` minimum)
+- **Borders:** The 1px gradient shell from Recipe 2 replaces flat strokes. Do not use `border: 1px solid …` on cards.
+- **Blur:** 12px (default), 24px (heavy / hero only)
+
+```yaml
+shadows:
+  glass:    "inset 0 1px 0 0 rgb(255,255,255), inset 0 -1px 1px 0 rgba(0,0,0,0.02), 0 1px 2px 0 rgba(0,0,0,0.05)"
+  chip:     "inset 0 1px 0 0 rgb(255,255,255), 0 1px 2px 0 rgba(0,0,0,0.05)"
+  pressed:  "inset 0 1px 2px 0 rgba(0,0,0,0.2)"
+```
+
+---
+
+## 7. Shapes
+
+- **Corner radii:** 2, 3, 4, 5, 6, 8 (px). **Outer shell uses 6px, inner surface uses 5px** — this asymmetry creates the hairline frame illusion.
+- **Icon treatment:** Linear, 1.5px stroke
+- **Icon sets:** Solar (linear variant)
+
+---
+
+## 8. Components
+
+- **Primary button:** Recipe 4 (light glass + dark text) for most CTAs.
+- **Emphasis primary:** Recipe 4b (dark fill + light text) — **one per page max** for the singular most-important action.
+- **Text link:** Recipe 5. Color `#8C8273`, hover `#2C2C2A`.
+- **Cards / chips:** Recipes 2 and 3.
+- **Icons:** Linear stroke, Solar set. Color `#7A756D` default, `#A3907A` accented.
+
+---
+
+## 9. Do's and Don'ts
+
+### Do
+
+- Do **pick one scheme** (WARM / MIST / SAGE / PEARL) at the start of every page using the §2.2 Decision Matrix, and apply it via `<html data-scheme="…">` or by including the matching `:root` block.
+- Do apply Recipe 1 (page gradient) as the root background of every page.
+- Do wrap **every** card, chip, and primary button in Recipe 2's two-layer shell structure.
+- Do keep the inset white highlight (`inset 0 1px 0 0 rgb(255,255,255)`) on every glass surface — it is what makes the system feel skeuomorphic rather than flat. This highlight is **scheme-independent** and never tints.
+- Do reference all colors via `var(--token)` so swapping schemes re-tints every component automatically.
+- Do use Fraunces only for display ≥32px; switch to Geist for everything smaller.
+- Do keep corner radii within the 2/3/4/5/6/8px family. Outer shell 6px, inner 5px.
+- Do load Noto Serif SC + MiSans for any CJK content and place them after Latin fonts in the fallback chain.
+
+### Don't
+
+- **Don't skip the scheme-selection step.** Every page must commit to one of WARM / MIST / SAGE / PEARL via `data-scheme` (or by including only that scheme's `:root` block). Forgetting this leaves all `var(--…)` references unresolved or falling back to WARM by accident.
+- **Don't mix tokens from two schemes** on the same page. If you find yourself hardcoding a hex from another scheme's palette, you're mixing — refactor to swap the whole scheme instead.
+- **Don't write raw hex inside any Recipe component** (e.g., `bg-[#A3907A]`, `text-[#2C2C2A]`). All Recipe colors must reference `var(--…)`. Raw hex only belongs inside the `:root` scheme blocks in §2.3.
+- **Don't render any card, chip, or primary button without the gradient border shell wrapper.** Most common failure mode — kills the system's identity.
+- **Don't use `bg-white` or any pure-white surface at the page level.** Page must be the scheme's bg gradient (Recipe 1 — `from-[var(--bg-top)] to-[var(--bg-bottom)]`).
+- **Don't use a dark-filled primary button — except via Recipe 4b, used ONCE per page maximum.** Default primary buttons (Recipe 4) are light glass with dark text. The dark-fill emphasis button (Recipe 4b) exists for exactly **one** singular CTA per page (e.g., the "+ New Rule" / "Sign up" / "Publish" button). Two dark buttons on one page negate each other — the second one MUST downgrade to Recipe 4 light glass.
+- **Don't replace inset shadow recipes with flat drop-shadows** like `shadow-md` / `shadow-lg`. The depth language is inset-driven.
+- **Don't render a hero without an atmosphere layer (Recipe 6).** A flat gradient hero with no motion field is dead and exits this style.
+- **Don't render the atmosphere layer as static SVG.** The motion is the point. If you cannot run `requestAnimationFrame` in the target environment, say so explicitly — do not silently downgrade.
+- **Don't omit the Canvas RAF loop in atmosphere code.** Position drift + dynamic connections are non-negotiable; opacity-only "breathing" is not enough.
+- **Don't stack info chips on their own row above the hero title.** Chips MUST be absolutely positioned overlapping the hero block (Recipe 7).
+- **Don't leave more than 80px of vertical empty space between two adjacent sections.** Density is part of the identity.
+- **Don't end the hero on a long void.** The next section must visually attach (≤80px below CTA), or a component should bleed across the boundary.
+- **Don't let CJK content fall through to system fonts** (PingFang / Microsoft YaHei / SimSun without explicit declaration). The CJK pair (Noto Serif SC + MiSans) must be loaded and listed in the fallback chain.
+- **Don't use weight 200 for CJK body text.** Chinese characters at 12px / weight 200 are illegible — bump to 400 minimum.
+- **Don't invent one-off font sizes** (e.g., `text-[22px]`, `text-[28px]`). Always use the nearest token from §3. If the gap between two tokens feels wrong, that's a token problem to flag — not a license to free-size.
+- **Don't use fixed `text-[96px]` for display titles.** Use the `clamp()` token so the title scales on narrow viewports — fixed pixel display sizes overflow on mobile.
+- **Don't render code blocks with dark backgrounds** (`bg-slate-900`, `bg-[#0D1117]`, `bg-black`, GitHub / Monokai / Dracula palettes). Use Recipe 9's light tinted surface.
+- **Don't use cross-hue background gradients on code blocks** (cream → red, blue → green, sage → red, etc.). The bg of all three Recipe 9 variants is **the same `--surface-tinted`** — error/success state shows up only in the label color and leading icon. Cross-hue gradients look muddy especially in MIST / SAGE / PEARL schemes.
+- **Don't render form inputs with default Tailwind chrome** (`border-gray-300`, `focus:ring-2 focus:ring-blue-500`, browser-default `<select>` chevron). Use Recipe 10 — gradient shell, color-shift focus.
+- **Don't leave dead space at the bottom of cards in a grid.** When cards share a row and have unequal content heights, the shorter card's gradient shell will visibly bleed below its content unless you use `h-full flex flex-col` on the inner surface and `mt-auto` on the metadata row (Recipe 8).
+- **Don't use saturated semantic colors for badges** (`bg-green-500`, `bg-red-500`, `bg-blue-500`). Map all status semantics into the four warm-toned variants from Recipe 11.
+- Don't introduce extra accent colors outside the core palette unless the page needs a new semantic state.
+- Don't use Fraunces for body text or buttons.
+- Don't use pill-shaped buttons (`rounded-full`) or sharp 0px corners.
+- Don't use heavy blurs (over 24px) or saturated drop shadows.
+
+---
+
+## 10. Self-Check Before Output
+
+Before returning code, verify each of the following. **If any answer is "no", the output is not compliant — revise before returning.**
+
+0. **Did you start your output with the mandatory scheme announcement blockquote?**
+   ```
+   > Scheme: <NAME> — picked because the brief mentions "<quoted user keyword>".
+   > Switch with "use [warm | mist | sage | pearl] scheme".
+   ```
+   Missing this blockquote = the user has no way to discover the other three schemes. Also: when you wrote the announcement, did you **quote an actual keyword from the user's brief**? If you wrote "picked because [generic reason]" without quoting the user's words, the reasoning is hand-waved and likely wrong — re-read the brief and pick again.
+0a. **Did you pick a scheme using §2.2 Decision Matrix — and did you bias AWAY from WARM?** If your scheme is WARM, double-check: is the brief truly editorial / writing / lifestyle, or is it engineering / wellness / luxury and you defaulted by reflex? Most AI-tool / B2B / dev briefs should be MIST.
+0b. **Did you apply the scheme** via `<html data-scheme="…">` or by including only that one `:root` block? A page with `var(--token)` references and no scheme committed produces unstyled output.
+0c. **Are all color references through `var(--…)` instead of raw hex** inside Recipe components? Search the output for `text-[#`, `bg-[#`, `from-[#`, `to-[#` — any matches outside the `:root` scheme blocks are violations.
+1. Does the root element apply one of the three required page gradients (Recipe 1) using `var(--bg-top)` / `var(--bg-bottom)`?
+2. Is **every** card, chip, and primary CTA wrapped in the Recipe 2 / 3 / 4 two-layer shell? (count them — none should be bare)
+3. Does every glass surface include the `inset 0 1px 0 0 rgb(255,255,255)` top highlight?
+4. Is the primary button **light glass with dark text** (not a dark-fill button)?
+5. Are display headings using Fraunces with `font-variation-settings: 'opsz' 144, 'SOFT' 50`, weight 200, uppercase?
+6. Are body and label text using Geist (not Inter, not system default)? **If any CJK content exists, is `Noto Serif SC` (display) and `MiSans` (body/label) included in the font-family fallback chain — not just left to system PingFang / YaHei?**
+7. Are all corner radii in the 2/3/4/5/6/8 family, with outer shells at 6px and inner surfaces at 5px?
+8. Is the page background a warm cream gradient (never pure white)?
+9. Does the hero have an atmosphere layer (Recipe 6) **and is it actually animating**? Trace the code: is there a `requestAnimationFrame` loop updating node positions every frame? If no, the layer is static and non-compliant.
+10. Are chips absolutely positioned **overlapping** the hero block (Recipe 7), NOT stacked above it on their own row?
+11. Is every section-to-section gap ≤80px? Mentally measure — if you see over 120px of empty air anywhere, the layout is too loose.
+12. Is the hero internal rhythm tight: title → subtitle 16–24px, subtitle → CTA 32–40px?
+13. **Are all font-sizes drawn from the §3 type-scale tokens?** Scan the output — every `text-[Npx]` should map to display-xl/lg/md, heading-section/card, body-reading/md, label-md, or mono-meta. One-off sizes like `text-[22px]` are a violation.
+14. **Are display titles using `clamp()` so they scale on narrow viewports?** A fixed `text-[96px]` on display is a violation — should be `text-[clamp(56px,8vw,96px)]`.
+15. **If cards share a row, does each card's inner surface have `h-full flex flex-col` with metadata anchored via `mt-auto`?** Bottom dead-space on shorter cards is a violation (Recipe 8).
+16. **Are code blocks on a light warm-tint surface (Recipe 9) with mono-meta typography — NOT dark slate / pure black?**
+17. **Are form inputs (search, select, dropdown) wrapped in the gradient shell with a color-shift focus state — NOT default Tailwind `border-gray-300` + blue focus ring (Recipe 10)?**
+18. **Are status / category badges using one of the four warm variants from Recipe 11 (neutral / required / success / draft) — NOT saturated `green-500` / `red-500` / `blue-500`?**
+
+#### Motion audit (per §11.1 conditional-mandatory rules)
+
+19. **M1** — If there is a hero, does it contain `<HeroAtmosphere />`? Trace the code: is the Canvas rendering and the RAF loop running?
+20. **M2** — Count every chip and live-state dot in the output. Does **each one** carry the `lm-live-dot` class (or equivalent `animation: lm-dot-pulse ...`)? A static dot is a violation.
+21. **M3** — Count every number ≥ 3 digits in data bands / KPI cards / statistics blocks. Does **each one** use the `useCountUp` hook (or equivalent RAF count-up)? A hardcoded `"1,284"` in JSX is a violation.
+22. **M4** — Count every interactive / clickable card. Does **each one** carry the `lm-card-interactive` class (or equivalent inlined `translateY(-1px)` hover)? Critical: scan the output for `hover:scale-`, `hover:scale-[`, `transform: scale(` — **any match is a violation**, replace with translateY.
+23. **M5** — Count every card grid, data table, list, KPI block, feed, milestone group, and any other repeating-module section on the page. Does **EVERY ONE** of them wrap its items in `<RevealItem index={i}>` (or equivalent useScrollReveal with stagger)? Applying M5 to only the last module / only below-fold modules / only one section is the most common failure mode — it MUST be on every collection-shaped module, with per-item 100ms stagger capped at 600ms. (Hero, sticky bar, and standalone cards are excluded — see M5's application audit.)
+
+---
+
+## 11. Motion
+
+Motion in lightmorphism is **slow, controlled, and below the threshold of attention**. The mood is "premium quiet" — surfaces breathe, numbers settle, atmospheres drift. **Nothing pops, jumps, or springs.** This is intentionally quieter than brutalism's mechanical vocabulary; do not borrow brutalist motion devices (clock, scramble, marquee, snap reveals).
+
+- **Motion level:** Moderate-low (quieter than typical "moderate" because the tone is editorial, not industrial)
+- **Durations:** 150ms (hover micro), 300ms (UI transitions), 600ms (scroll reveals), 1200ms (number count-up), 2400ms (chip pulse), 30s+ (background atmospheres)
+- **Easings:** `ease-out`, `cubic-bezier(0.4, 0, 0.2, 1)`. **Never use `linear`, `steps()`, or spring overshoots.**
+- **Forbidden:** scale-up hovers, parallax, marquee, text scramble, snap, bounce — anything that calls attention to itself.
+
+### 11.1 Required motion — conditional-mandatory rules (NOT "pick any 3")
+
+Each motion pattern below is **mandatory whenever its structural trigger exists on the page**. AI reflexively skips motion when given soft "pick at least N" language, so the rules are per-element instead: scan the output, find every trigger condition, apply the matching motion. Missing any one is a violation, not a stylistic choice.
+
+| Recipe | Mandatory **whenever** the page contains... | Failure mode if skipped |
+|---|---|---|
+| **M1** Hero Atmosphere | a hero section | Hero feels dead, page identity collapses |
+| **M2** Chip Dot Pulse | any chip / badge with a live-state dot | Static dot reads as "screenshot", not "live" |
+| **M3** Number Count-Up | any number ≥ 3 digits in a data band, KPI grid, or statistics block | Numbers read as static facts; page feels like a PDF |
+| **M4** Card Hover Lift | any clickable / interactive card (cursor pointer, link wrap, onClick) | Cards feel inert; nothing telegraphs interactivity |
+| **M5** Scroll Reveal (stagger) | **every** card grid / data table / list / KPI block / feed / repeating-module section (i.e., any "collection of items" rendered as a group) | Single static appearance; page reads as a PDF dump instead of composing itself as user scrolls |
+
+If a structural trigger exists and the matching motion is missing, the output is non-compliant. **No "I judged motion unnecessary here" override** — that judgment is the failure mode this list exists to prevent.
+
+#### M1 — Hero Atmosphere (Recipe 6, mandatory whenever a hero exists)
+
+Canvas constellation behind every hero. See Recipe 6 for the full Canvas + RAF implementation; reads `--atmosphere-rgb` so it auto-tints across schemes.
+
+#### M2 — Chip Live-Dot Pulse
+
+Slow opacity breath on the live-state dot in chips and status indicators. 2.4s sinusoidal cycle. Signals "the system is running" without being noisy.
+
+```css
+@keyframes lm-dot-pulse {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1.0; }
+}
+.lm-live-dot { animation: lm-dot-pulse 2.4s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lm-live-dot { animation: none; opacity: 0.85; }
+}
+```
+
+```jsx
+{/* Inside Recipe 3 chip */}
+<span className="lm-live-dot w-1.5 h-1.5 rounded-full" style={{ background: 'var(--tertiary)' }} />
+```
+
+#### M3 — Number Count-Up on First Paint
+
+Numbers in the data band animate from 0 to their final value over 1200ms with cubic ease-out. Use `requestAnimationFrame`, NOT `setInterval`. Tells the user "this data is live" without flashing.
+
+```jsx
+import { useEffect, useState } from "react"
+
+function useCountUp(target, duration = 1200) {
+  const [value, setValue] = useState(0)
+  useEffect(() => {
+    const t0 = performance.now()
+    let raf
+    const step = (t) => {
+      const p = Math.min(1, (t - t0) / duration)
+      const eased = 1 - Math.pow(1 - p, 3)   // ease-out cubic
+      setValue(target * eased)
+      if (p < 1) raf = requestAnimationFrame(step)
+    }
+    raf = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(raf)
+  }, [target, duration])
+  return value
+}
+
+// Usage in the data band
+function StatNumber({ value, format = "int" }) {
+  const v = useCountUp(value)
+  const formatted = format === "percent" ? v.toFixed(2) + "%"
+                  : format === "decimal" ? v.toFixed(1)
+                  : Math.round(v).toLocaleString()
+  return (
+    <span className="text-[clamp(36px,5vw,56px)] font-light tabular-nums text-[var(--text-primary)]"
+          style={{ fontFamily: "Fraunces, 'Noto Serif SC', serif" }}>
+      {formatted}
+    </span>
+  )
+}
+```
+
+For values with units like "2.3 min", animate the numeric portion only; keep the unit static.
+
+#### M4 — Card Hover Lift (translateY ONLY — never scale, never grow)
+
+On hover, interactive cards lift **1px via `translateY`** and the inset white highlight brightens. Tiny skeuomorphic cue — the card feels pickup-able. The motion is **always vertical translation**, never a size change.
+
+```css
+.lm-card-interactive {
+  transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 300ms ease-out;
+}
+.lm-card-interactive:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255,255,255, 0.95),     /* highlight brightens */
+    inset 0 -1px 1px 0 rgba(0,0,0,0.03),
+    0 4px 8px -2px rgba(0,0,0,0.06),             /* depth shadow deepens */
+    0 2px 4px 0 rgba(0,0,0,0.04);
+}
+```
+
+Apply **only to interactive cards** (links, clickable content). Static info cards stay flat — over-applying lift turns the page jittery. Translate is exactly `-1px`, NOT `-4px` or `-8px` — anything more breaks the quiet mood.
+
+**🚫 Anti-pattern — scale-on-hover is WRONG for this system.** Tailwind's `hover:scale-*` is the most common AI default and it must NOT be used here. Every variant of scale violates this system:
+
+```jsx
+// ALL OF THESE ARE WRONG — they fail M4 and §11.4 simultaneously:
+className="hover:scale-105"           // ❌
+className="hover:scale-110"           // ❌
+className="hover:scale-[1.02]"        // ❌
+className="hover:scale-[1.01]"        // ❌ even "subtle" scale is forbidden
+className="transition hover:scale-105 hover:shadow-lg"  // ❌
+
+// CORRECT — apply the M4 class instead:
+className="lm-card-interactive"       // ✅ (or inline the M4 styles directly)
+```
+
+Why this matters: scale is the AI default because it's the cheapest "feels interactive" pattern in Tailwind. But scale on a card with a gradient border shell makes the shell itself stretch and shimmer, breaking the hairline edge — the system's most important visual signature. Vertical translate keeps the shell intact and adds depth via the highlight brightening. **There is no acceptable scale-hover in lightmorphism.**
+
+#### M5 — Scroll Reveal with Stagger (apply to EVERY module — not just one)
+
+Cards and section blocks softly fade-and-rise into view (`opacity 0.6 → 1`, `translateY 8px → 0`) as they enter the viewport. **The fade-and-rise applies to EVERY card grid / data table / list / KPI block / feed on the page**, with **per-item stagger inside each module** (100ms between items, capped at 600ms total per module). It is NOT a single page-level animation — applying it only to "the last module below the fold" is the most common AI mistake here.
+
+**Critical: content is visible without JS.** The reveal is an overlay JS adds AFTER it confirms initialization. If JS fails (slow network, ad blocker, error), content shows immediately — no animation, but no blank screen.
+
+```jsx
+import { useEffect, useRef } from "react"
+
+/**
+ * useScrollReveal(index = 0)
+ *
+ * Returns a ref to attach to a reveal target. `index` is the item's position
+ * within its parent module (0-based) — used to compute the stagger delay.
+ *
+ * Stagger: 100ms × index, capped at 600ms total (so 20-card modules don't
+ * animate for 2 seconds).
+ *
+ * Safe-by-default: the .lm-reveal-armed class is added only after mount
+ * confirms JS is running. If JS fails, the element stays at its CSS default
+ * (fully visible).
+ */
+function useScrollReveal(index = 0) {
+  const ref = useRef(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const delay = Math.min(index * 100, 600)
+    el.style.setProperty("--reveal-delay", `${delay}ms`)
+    el.classList.add("lm-reveal-armed")
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          el.classList.add("lm-reveal-in")
+          io.disconnect()
+        }
+      },
+      { threshold: 0.15, rootMargin: "0px 0px -10% 0px" }
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [index])
+  return ref
+}
+
+/**
+ * RevealItem — a thin wrapper that handles the reveal lifecycle for one
+ * item inside a module. Always use this around children in `.map()` so each
+ * item gets its own ref and stagger index — DO NOT call useScrollReveal
+ * inside a .map() body (that breaks Rules of Hooks).
+ */
+function RevealItem({ index, children, className = "" }) {
+  const ref = useScrollReveal(index)
+  return (
+    <div ref={ref} className={className}>
+      {children}
+    </div>
+  )
+}
+
+// ───── Correct usage: every module-shaped section wraps its items ─────
+
+function KPIGrid({ items }) {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+      {items.map((item, i) => (
+        <RevealItem key={item.id} index={i}>
+          <KPICard data={item} />
+        </RevealItem>
+      ))}
+    </div>
+  )
+}
+
+function ActivityFeed({ events }) {
+  return (
+    <ul>
+      {events.map((event, i) => (
+        <RevealItem key={event.id} index={i}>
+          <ActivityRow event={event} />
+        </RevealItem>
+      ))}
+    </ul>
+  )
+}
+
+function MilestoneCards({ milestones }) {
+  return (
+    <div className="grid grid-cols-3 gap-3">
+      {milestones.map((m, i) => (
+        <RevealItem key={m.id} index={i}>
+          <MilestoneCard data={m} />
+        </RevealItem>
+      ))}
+    </div>
+  )
+}
+```
+
+```css
+/* Default: fully visible. Without JS, no animation, no flicker. */
+.lm-reveal-armed {
+  --reveal-delay: 0ms;
+  opacity: 0.6;
+  transform: translateY(8px);
+  transition: opacity 600ms ease-out var(--reveal-delay),
+              transform 600ms cubic-bezier(0.4, 0, 0.2, 1) var(--reveal-delay);
+}
+.lm-reveal-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .lm-reveal-armed { opacity: 1; transform: none; transition: none; }
+}
+```
+
+**Why this pattern matters (two distinct things):**
+
+1. **Safe-by-default** — never use `opacity: 0` by default in CSS that JS is supposed to flip on. If JS doesn't run, the page is invisible — worst possible failure mode. JS *adds* the armed class so the worst case is "no animation" instead of "blank page".
+
+2. **Per-module application** — M5 must be applied to **every** card grid / list / feed / KPI block, not just one module on the page. The most common AI failure is to apply M5 to only the last module below the fold, leaving the rest static. The page should feel like it's **composing itself as you scroll** — each module reveals its own items in sequence, with a quiet 100ms stagger that caps at 600ms (so 50-item lists don't animate for 5 seconds).
+
+### M5 application audit — every one of these MUST use RevealItem
+
+If the page contains any of these structures, every one of them needs M5:
+
+- ✅ Grid of feature cards / KPI cards / pricing cards / team cards
+- ✅ Data table rows (long tables)
+- ✅ Activity feed / timeline / event log
+- ✅ Article list / blog index / search results
+- ✅ Sequence of milestones / steps / progress cards
+- ✅ Image / media gallery
+- ✅ Comment thread / discussion list
+
+**Excluded (don't apply M5 here):**
+
+- ❌ Hero section — visible on first paint, no reveal needed
+- ❌ Sticky / fixed navigation, status bar, footer
+- ❌ Single standalone cards that aren't part of a collection
+- ❌ Floating chips / overlays (positioned absolutely)
+
+---
+
+### 11.2 Optional motion via ReactBits
+
+[**ReactBits**](https://reactbits.dev) is an open-source library (**MIT + Commons Clause**, free for personal and commercial use, copy-paste model) with 110+ animated components. Several fit lightmorphism's quiet aesthetic well. **Copy code from reactbits.dev into your project rather than installing as a dependency** — each component lives in your codebase so you can adapt the colors to `var(--accent-primary)` / `var(--text-primary)` etc.
+
+| ReactBits component | What it does | How to adapt for lightmorphism |
+|---|---|---|
+| [**CountUp**](https://reactbits.dev/components/count-up) | Animated number counter | Alternative to native M3; replace any hardcoded colors with `var(--text-primary)` |
+| [**BlurText**](https://reactbits.dev/animations/blur-text) | Word-by-word blur-to-clear reveal | Apply to hero subtitle on first paint; text color stays `var(--text-secondary)` |
+| [**ShinyText**](https://reactbits.dev/animations/shiny-text) | Slow shimmer across text | Apply to display-lg hero title — extremely on-brand for "premium quiet" |
+| [**FadeContent**](https://reactbits.dev/animations/fade-content) | Container fade on scroll | Drop-in alternative to native M5; same safe-by-default principle applies |
+| [**GlassIcons**](https://reactbits.dev/components/glass-icons) | Glassy icon hover states | Already matches Recipe 2; use in feature card icons |
+| [**Magnet**](https://reactbits.dev/animations/magnet) | Element follows cursor magnetically | Apply to Recipe 4b Emphasis Primary; keep travel ≤ 8px so it stays subtle |
+
+**Attribution rules for ReactBits code:**
+
+- Personal / internal team projects: **no attribution required**
+- Public open-source projects: keep the original ReactBits source comment at the top of any copied component file
+- **Do NOT** redistribute ReactBits components inside a paid skill / template / theme as the primary product (the Commons Clause restricts selling the library itself, even though using it in your own commercial site is fine)
+
+**Don't pick from these "loud" ReactBits components** — they clash with lightmorphism's mood:
+
+- ❌ Aurora / LiquidEther / GradientBlinds — too saturated for our cream / muted palette
+- ❌ RainbowText / SpotlightCard — too dramatic, breaks "quiet"
+- ❌ Particles / Beams / Threads at default density — competes with our Recipe 6 atmosphere; if you want one, replace Recipe 6 rather than stack on top
+- ❌ DecryptedText / TextPressure — mechanical brutalist vocabulary, wrong tone
+- ❌ Lanyard / Ribbons / TiltedCard — over-the-top hover effects
+
+### 11.3 Allowed hover patterns
+
+- Color shift on text
+- Underline appearance on links
+- Shell brightness (`hover:brightness-[0.98]`)
+- Card lift (M4 above) on interactive cards only
+- Magnetic pull (≤8px) on emphasis buttons
+
+### 11.4 Strictly forbidden
+
+- Scale-up hovers (`hover:scale-105`, `hover:scale-110`)
+- Parallax scrolling
+- Marquee / infinite scroll text strips
+- Text scramble / glitch effects
+- Spring overshoots, bouncing
+- Decorative motion blurs
+- Any animation with `easing: linear` (it reads as mechanical/cheap)
+
+---
+
+## 12. Attribution
+
+This design system is **adapted from the "Stratum — System Coordination Framework" by [@mengto](https://www.threads.com/@mengto) on [Neuform](https://neuform.ai)**, originally published in the Neuform community library at https://neuform.ai/community/featured. The original DESIGN.md provided the color tokens, glass / gradient-shell technique, and overall warm-cream visual signature.
+
+Beyond the original tokens, this skill adds:
+
+- A full Required Recipes section (1–11) translating each visual technique into copy-paste React + Tailwind code
+- A responsive type scale with `clamp()` and 9 named tokens
+- Latin + CJK font pairing (Fraunces / Geist + Noto Serif SC / MiSans)
+- Density and composition rules (≤80px section gaps, overlapping hero chips, etc.)
+- Card-grid equal-height pattern, code block / form input / status badge recipes
+- A 18-item Self-Check loop for AI generation faithfulness
+
+**If you redistribute this skill, fork it, or publish derivative work based on it publicly, please preserve this attribution and link back to https://neuform.ai.** Personal and internal team use does not require notification, but attribution is appreciated.
+
+Neuform does not publish formal license terms as of the date of this skill; usage here is based on the platform's "free to download and remix" framing and @mengto's public statements promoting the templates for community use.
+
+### Licensing — see `LICENSE.md`
+
+This skill ships with a `LICENSE.md` in its root. Summary:
+
+- **Design content** (color schemes, typography choices, composition rules, prose around Recipes) — **CC-BY-4.0**. Free for commercial use with attribution.
+- **Code snippets** (React + Tailwind + JS in Recipes 1–11 and §11.1 Motion recipes) — **MIT License**. Free copy / modify / sublicense.
+- **Upstream attribution chain** — preserved in both this section and LICENSE.md §3.
+- **Third-party libraries** (ReactBits etc.) — referenced by link only, NOT bundled; remain under their own licenses (see LICENSE.md §4).
+
+Before uploading this skill to any public marketplace (秒悟 Meoo, Claude Skills Marketplace, GitHub, etc.), read `LICENSE.md` in full.
+
+
+## Directory Structure
+
+```
+/home/project/skills/lightmorphism/
+├── .skill-version
+├── LICENSE.md
+├── SKILL.md
+└── examples
+    ├── lattice-landing.md
+    └── weekly-digest.md
+
+```
+
+
+## 📋 重要资源
+
+**重要提示**：此技能包含以下附加资源，请在使用前仔细阅读：
+
+📚 **使用示例**：提供了使用示例。请阅读 `examples/` 目录下的文件，了解如何正确使用此技能。
+
+## Skill Location
+
+Location: /home/project/skills/lightmorphism
+
+All skill resources have been synced to your workspace.No package.json found, skipping dependency installation.

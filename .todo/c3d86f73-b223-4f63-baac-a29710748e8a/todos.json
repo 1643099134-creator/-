@@ -1,0 +1,50 @@
+[
+  {
+    "id": "1",
+    "status": "completed",
+    "content": "读取 Aurora HTML 完整内容，提取所有交互功能",
+    "priority": "high"
+  },
+  {
+    "id": "2",
+    "status": "completed",
+    "content": "创建项目管理页面 /projects（CRUD + Pipeline）",
+    "priority": "high"
+  },
+  {
+    "id": "3",
+    "status": "completed",
+    "content": "创建任务管理页面 /tasks（看板三列）- 替换现有iframe",
+    "priority": "high"
+  },
+  {
+    "id": "4",
+    "status": "completed",
+    "content": "创建团队页面 /team",
+    "priority": "medium"
+  },
+  {
+    "id": "5",
+    "status": "completed",
+    "content": "创建消息页面 /messages",
+    "priority": "medium"
+  },
+  {
+    "id": "6",
+    "status": "completed",
+    "content": "创建 AI Agent 页面 /agent",
+    "priority": "medium"
+  },
+  {
+    "id": "7",
+    "status": "completed",
+    "content": "创建设置页面 /settings",
+    "priority": "medium"
+  },
+  {
+    "id": "8",
+    "status": "completed",
+    "content": "验证所有新页面运行正常",
+    "priority": "high"
+  }
+]

@@ -1,0 +1,17 @@
+The file /home/project/src/routes/index.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+1006→  try {
+1007→    const raw = localStorage.getItem(PERSONAL_NOTES_KEY);
+1008→    if (raw) return JSON.parse(raw);
+1009→  } catch { /* ignore */ }
+1010→  return [
+1011→    { id: "1", content: "【团队提醒】本周五下午3点全员会议，请准时参加", color: "#fef3c7", timestamp: Date.now() - 3600000 },
+1012→    { id: "2", content: "【项目通知】CRM系统定制开发已进入交付阶段", color: "#dbeafe", timestamp: Date.now() - 86400000 },
+1013→    { id: "3", content: "【资源共享】新版设计规范文档已上传至共享盘", color: "#d1fae5", timestamp: Date.now() - 172800000 },
+1014→  ];
+1015→}
+1016→
+1017→function savePersonalNotes(notes: PersonalNote[]) {
+1018→  try { localStorage.setItem(PERSONAL_NOTES_KEY, JSON.stringify(notes)); } catch { /* ignore */ }
+1019→}

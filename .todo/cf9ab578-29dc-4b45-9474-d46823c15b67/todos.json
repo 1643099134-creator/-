@@ -1,0 +1,38 @@
+[
+  {
+    "id": "1",
+    "status": "completed",
+    "content": "更新 styles.css 添加 Aurora 设计系统的颜色变量和样式",
+    "priority": "high"
+  },
+  {
+    "id": "2",
+    "status": "completed",
+    "content": "重构侧边栏导航组件",
+    "priority": "high"
+  },
+  {
+    "id": "3",
+    "status": "completed",
+    "content": "重构顶部栏和页面标题",
+    "priority": "high"
+  },
+  {
+    "id": "4",
+    "status": "completed",
+    "content": "重构仪表盘 KPI 卡片和布局",
+    "priority": "high"
+  },
+  {
+    "id": "5",
+    "status": "completed",
+    "content": "重构项目进度和任务面板",
+    "priority": "high"
+  },
+  {
+    "id": "6",
+    "status": "completed",
+    "content": "验证项目运行正常",
+    "priority": "medium"
+  }
+]

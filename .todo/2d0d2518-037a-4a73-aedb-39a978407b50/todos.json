@@ -1,0 +1,20 @@
+[
+  {
+    "id": "1",
+    "status": "completed",
+    "content": "重写 TeamNotes 组件使用 Supabase + Realtime",
+    "priority": "high"
+  },
+  {
+    "id": "2",
+    "status": "completed",
+    "content": "重写 SharedActionMemos 组件使用 Supabase + Realtime",
+    "priority": "high"
+  },
+  {
+    "id": "3",
+    "status": "completed",
+    "content": "验证构建和实时功能正常",
+    "priority": "high"
+  }
+]

@@ -1,0 +1,50 @@
+[
+  {
+    "id": "1",
+    "status": "completed",
+    "content": "创建 src/types 目录及全局类型定义文件",
+    "priority": "high"
+  },
+  {
+    "id": "2",
+    "status": "completed",
+    "content": "创建 src/store 目录及全局状态管理",
+    "priority": "high"
+  },
+  {
+    "id": "3",
+    "status": "completed",
+    "content": "创建 src/supabase/api 目录及业务 CRUD 文件",
+    "priority": "high"
+  },
+  {
+    "id": "4",
+    "status": "completed",
+    "content": "拆分 src/lib/auth.ts 到 supabase/auth.ts",
+    "priority": "high"
+  },
+  {
+    "id": "5",
+    "status": "completed",
+    "content": "创建 src/pages 目录结构及业务页面占位",
+    "priority": "medium"
+  },
+  {
+    "id": "6",
+    "status": "completed",
+    "content": "更新 src/hooks 按业务拆分",
+    "priority": "medium"
+  },
+  {
+    "id": "7",
+    "status": "completed",
+    "content": "更新 src/routes 仅保留路由配置（现有路由保持不变，pages 为新增扩展点）",
+    "priority": "medium"
+  },
+  {
+    "id": "8",
+    "status": "completed",
+    "content": "验证 dev 启动正常",
+    "priority": "high"
+  }
+]

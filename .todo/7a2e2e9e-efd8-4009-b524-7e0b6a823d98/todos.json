@@ -1,0 +1,44 @@
+[
+  {
+    "id": "1",
+    "status": "completed",
+    "content": "创建员工认证 store（localStorage 模拟账号+登录状态）",
+    "priority": "high"
+  },
+  {
+    "id": "2",
+    "status": "completed",
+    "content": "创建 /login 路由页面（账号密码表单）",
+    "priority": "high"
+  },
+  {
+    "id": "3",
+    "status": "completed",
+    "content": "创建员工日程 store（localStorage 按员工ID存储）",
+    "priority": "high"
+  },
+  {
+    "id": "4",
+    "status": "completed",
+    "content": "修改 Sidebar 显示登录状态/头像/退出按钮",
+    "priority": "high"
+  },
+  {
+    "id": "5",
+    "status": "completed",
+    "content": "修改 Dashboard 首页展示当天工作日程",
+    "priority": "high"
+  },
+  {
+    "id": "6",
+    "status": "completed",
+    "content": "修改 __root.tsx 添加路由守卫（未登录跳转 /login）",
+    "priority": "high"
+  },
+  {
+    "id": "7",
+    "status": "completed",
+    "content": "运行 pnpm run dev 验证构建",
+    "priority": "high"
+  }
+]
