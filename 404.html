@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>页面跳转中...</title>
+    <script>
+      // GitHub Pages SPA 路由支持
+      // 将 404 页面重定向到 index.html 并保留路径信息
+      var repoName = '/-';
+      var pathSegmentsToKeep = 0;
+
+      var l = window.location;
+      l.replace(
+        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+        repoName + '/' +
+        l.pathname.split('/').slice(1 + pathSegmentsToKeep).join('/').replace(/\/$/, '') +
+        '?/' +
+        l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/\/$/, '') +
+        l.search +
+        l.hash
+      );
+    </script>
+  </head>
+  <body></body>
+</html>
