@@ -11,22 +11,15 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { useAuth } from "@/hooks/useAuth";
 import { GlobalNotificationPopup } from "@/components/dashboard/GlobalNotificationPopup";
 
-// 获取去掉 basepath 前缀的路径
-function useCleanPathname() {
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
-  // 去掉 basepath 前缀 '/-' 或直接取 '/'
-  return pathname.replace(/^\/-/, '') || '/';
-}
-
 function NotFoundComponent() {
-  const pathname = useCleanPathname();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   if (pathname === "/") return null;
   return <Navigate to="/" replace />;
 }
 
 function ErrorComponent({ error }: { error: Error; reset: () => void }) {
   console.error(error);
-  const pathname = useCleanPathname();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   if (pathname === "/") return null;
   return <Navigate to="/" replace />;
 }
@@ -42,9 +35,7 @@ const PUBLIC_ROUTES = ["/login"];
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const rawPathname = useRouterState({ select: (s) => s.location.pathname });
-  // 去掉 basepath 前缀以匹配路由
-  const pathname = rawPathname.replace(/^\/-/, '') || '/';
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [isDark, setIsDark] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const { isAuthenticated, loading } = useAuth();
@@ -76,7 +67,7 @@ function RootComponent() {
   }
 
   // 路由守卫：非公开页面未登录时跳转 /login
-  const isPublicRoute = PUBLIC_ROUTES.some((r) => pathname === r || pathname.startsWith(r + '/'));
+  const isPublicRoute = PUBLIC_ROUTES.some((r) => pathname === r);
   if (!isPublicRoute && !isAuthenticated) {
     return (
       <QueryClientProvider client={queryClient}>

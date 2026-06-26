@@ -1,5 +1,6 @@
 import { QueryClient } from '@tanstack/react-query';
 import { createRouter } from '@tanstack/react-router';
+import { createHashHistory } from '@tanstack/history';
 import { routeTree } from './routeTree.gen';
 
 export const getRouter = () => {
@@ -8,7 +9,7 @@ export const getRouter = () => {
   const router = createRouter({
     routeTree,
     context: { queryClient },
-    basepath: '/-',
+    history: createHashHistory(),
     scrollRestoration: true,
     defaultPreloadStaleTime: 0,
   });
