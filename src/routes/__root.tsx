@@ -14,7 +14,7 @@ import { GlobalNotificationPopup } from "@/components/dashboard/GlobalNotificati
 // 获取去掉 basepath 前缀的路径
 function useCleanPathname() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  // 去掉 basepath 前缀 '/-' 或 '/'
+  // 去掉 basepath 前缀 '/-' 或直接取 '/'
   return pathname.replace(/^\/-/, '') || '/';
 }
 
