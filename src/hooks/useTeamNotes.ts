@@ -19,12 +19,20 @@ export function useTeamNotes() {
   const currentUser = getCurrentUserSync()?.email || "匿名";
 
   const STORAGE_KEY = "local_team_notes_v1";
+
+  // 排序：置顶优先，再按时间倒序
+  const sortNotes = (list: TeamNote[]) =>
+    [...list].sort((a, b) => {
+      if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+      return a.created_at < b.created_at ? 1 : -1;
+    });
+
   // 加载数据（从 localStorage）
   const fetchNotes = useCallback(async () => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY) || "[]";
       const data = JSON.parse(raw) as TeamNote[];
-      setNotes(data.sort((a, b) => (a.created_at < b.created_at ? 1 : -1)));
+      setNotes(sortNotes(data));
     } catch (err) {
       console.error("加载本地团队便签失败:", err);
     }
@@ -53,7 +61,7 @@ export function useTeamNotes() {
       };
       const next = [newNote, ...list];
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      setNotes(next);
+      setNotes(sortNotes(next));
       toast.success("团队便签已发布", {
         description: `${currentUser} 发布了新的${tag}`,
       });
@@ -71,7 +79,7 @@ export function useTeamNotes() {
       const list = JSON.parse(raw) as TeamNote[];
       const next = list.filter((n) => n.id !== id);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      setNotes(next);
+      setNotes(sortNotes(next));
       return true;
     } catch (err: any) {
       toast.error("删除失败", { description: err?.message || String(err) });
@@ -86,7 +94,7 @@ export function useTeamNotes() {
       const list = JSON.parse(raw) as TeamNote[];
       const next = list.map((n) => (n.id === id ? { ...n, pinned: !currentPinned } : n));
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      setNotes(next);
+      setNotes(sortNotes(next));
       return true;
     } catch (err: any) {
       toast.error("操作失败", { description: err?.message || String(err) });
@@ -101,7 +109,7 @@ export function useTeamNotes() {
       const list = JSON.parse(raw) as TeamNote[];
       const next = list.map((n) => (n.id === id ? { ...n, content } : n));
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      setNotes(next);
+      setNotes(sortNotes(next));
       return true;
     } catch (err: any) {
       toast.error("保存失败", { description: err?.message || String(err) });

@@ -132,6 +132,35 @@ export function Sidebar({ isDark, onToggleTheme, onOpenSettings }: SidebarProps)
             Navigation
           </div>
           <div className="space-y-1">
+            {/* 首页入口 */}
+            <Link
+              to="/"
+              className={cn(
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150",
+                pathname === "/"
+                  ? "bg-foreground text-background"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              <LayoutDashboard size={16} strokeWidth={2} />
+              <span className="flex-1">首页</span>
+            </Link>
+            {/* AI Agent 快捷入口 */}
+            <Link
+              to="/agent"
+              className={cn(
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150",
+                pathname === "/agent"
+                  ? "bg-foreground text-background"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              <Bot size={16} strokeWidth={2} />
+              <span className="flex-1">AI 助手</span>
+              <span className="flex items-center rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                Agent
+              </span>
+            </Link>
             {menus.map((menu) => {
               const Icon = getIcon(menu.icon);
               const isActive =

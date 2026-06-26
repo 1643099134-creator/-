@@ -1,40 +1,103 @@
 import { useState, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight, X, Calendar as CalendarIcon, Briefcase, Plane, FileText, Plus, Trash2, Pin, Edit3, Check, Tag, StickyNote, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { solarToLunar, getSolarTermForDate, getSolarTermsForMonth, SOLAR_TERMS } from "@/lib/lunarCalendar";
 import { useTeamNotes } from "@/hooks/useTeamNotes";
 import { useSharedMemos } from "@/hooks/useSharedMemos";
+import { usePersonalMemos } from "@/hooks/usePersonalMemos";
 import { toast } from "sonner";
 
 // 事项类型定义
 type EventType = "会议" | "出差" | "方案";
+type Priority = "高" | "中" | "低";
 
 interface CalendarEvent {
   id: string;
+  month: number; // 0-11
   date: number;
   title: string;
   type: EventType;
+  priority: Priority;
   time?: string;
 }
 
+// 优先级 → 背景色配置（只有3种颜色）
+const PRIORITY_CONFIG: Record<Priority, { bg: string; text: string; border: string }> = {
+  "高": { bg: "bg-red-50 dark:bg-red-950/30", text: "text-red-600 dark:text-red-400", border: "border-red-200 dark:border-red-900/30" },
+  "中": { bg: "bg-amber-50 dark:bg-amber-950/30", text: "text-amber-600 dark:text-amber-400", border: "border-amber-200 dark:border-amber-900/30" },
+  "低": { bg: "bg-blue-50 dark:bg-blue-950/30", text: "text-blue-600 dark:text-blue-400", border: "border-blue-200 dark:border-blue-900/30" },
+};
+
 const MOCK_EVENTS: CalendarEvent[] = [
-  { id: "1", date: 3, title: "项目启动会", type: "会议", time: "09:00" },
-  { id: "2", date: 5, title: "客户拜访", type: "出差", time: "14:00" },
-  { id: "3", date: 8, title: "技术方案评审", type: "方案", time: "10:00" },
-  { id: "4", date: 10, title: "周例会", type: "会议", time: "09:30" },
-  { id: "5", date: 12, title: "北京出差", type: "出差", time: "全天" },
-  { id: "6", date: 15, title: "需求文档评审", type: "方案", time: "14:00" },
-  { id: "7", date: 18, title: "部门会议", type: "会议", time: "15:00" },
-  { id: "8", date: 20, title: "上海客户拜访", type: "出差", time: "10:00" },
-  { id: "9", date: 22, title: "架构设计评审", type: "方案", time: "09:00" },
-  { id: "10", date: 25, title: "月度总结会", type: "会议", time: "16:00" },
-  { id: "11", date: 27, title: "深圳出差", type: "出差", time: "全天" },
-  { id: "12", date: 29, title: "产品方案汇报", type: "方案", time: "14:30" },
+  // 一月
+  { id: "j1-1", month: 0, date: 6, title: "年度规划会", type: "会议", priority: "高", time: "09:00" },
+  { id: "j1-2", month: 0, date: 15, title: "客户回访", type: "出差", priority: "中", time: "14:00" },
+  { id: "j1-3", month: 0, date: 20, title: "季度方案初稿", type: "方案", priority: "中", time: "10:00" },
+  // 二月
+  { id: "j2-1", month: 1, date: 5, title: "春节排班会", type: "会议", priority: "低", time: "09:00" },
+  { id: "j2-2", month: 1, date: 18, title: "年后复工检查", type: "会议", priority: "中", time: "10:00" },
+  { id: "j2-3", month: 1, date: 25, title: "产品迭代方案", type: "方案", priority: "高", time: "14:00" },
+  // 三月
+  { id: "j3-1", month: 2, date: 3, title: "季度总结会", type: "会议", priority: "高", time: "09:00" },
+  { id: "j3-2", month: 2, date: 10, title: "广州出差", type: "出差", priority: "高", time: "全天" },
+  { id: "j3-3", month: 2, date: 18, title: "培训方案评审", type: "方案", priority: "中", time: "14:00" },
+  { id: "j3-4", month: 2, date: 28, title: "月度复盘", type: "会议", priority: "低", time: "16:00" },
+  // 四月
+  { id: "j4-1", month: 3, date: 7, title: "项目启动会", type: "会议", priority: "高", time: "09:00" },
+  { id: "j4-2", month: 3, date: 12, title: "成都出差", type: "出差", priority: "中", time: "全天" },
+  { id: "j4-3", month: 3, date: 20, title: "方案中期评审", type: "方案", priority: "中", time: "10:00" },
+  // 五月
+  { id: "j5-1", month: 4, date: 6, title: "五一收心会", type: "会议", priority: "低", time: "09:30" },
+  { id: "j5-2", month: 4, date: 14, title: "客户现场调研", type: "出差", priority: "高", time: "全天" },
+  { id: "j5-3", month: 4, date: 22, title: "竞品分析方案", type: "方案", priority: "中", time: "14:00" },
+  { id: "j5-4", month: 4, date: 30, title: "半年度预审", type: "会议", priority: "高", time: "15:00" },
+  // 六月（当前月）
+  { id: "1", month: 5, date: 3, title: "项目启动会", type: "会议", priority: "高", time: "09:00" },
+  { id: "2", month: 5, date: 5, title: "客户拜访", type: "出差", priority: "高", time: "14:00" },
+  { id: "3", month: 5, date: 8, title: "技术方案评审", type: "方案", priority: "中", time: "10:00" },
+  { id: "4", month: 5, date: 10, title: "周例会", type: "会议", priority: "低", time: "09:30" },
+  { id: "5", month: 5, date: 12, title: "北京出差", type: "出差", priority: "高", time: "全天" },
+  { id: "6", month: 5, date: 15, title: "需求文档评审", type: "方案", priority: "中", time: "14:00" },
+  { id: "7", month: 5, date: 18, title: "部门会议", type: "会议", priority: "中", time: "15:00" },
+  { id: "8", month: 5, date: 20, title: "上海客户拜访", type: "出差", priority: "中", time: "10:00" },
+  { id: "9", month: 5, date: 22, title: "架构设计评审", type: "方案", priority: "高", time: "09:00" },
+  { id: "10", month: 5, date: 25, title: "月度总结会", type: "会议", priority: "低", time: "16:00" },
+  { id: "11", month: 5, date: 27, title: "深圳出差", type: "出差", priority: "中", time: "全天" },
+  { id: "12", month: 5, date: 29, title: "产品方案汇报", type: "方案", priority: "高", time: "14:30" },
+  // 七月
+  { id: "j7-1", month: 6, date: 4, title: "半年度总结", type: "会议", priority: "高", time: "09:00" },
+  { id: "j7-2", month: 6, date: 11, title: "杭州出差", type: "出差", priority: "中", time: "全天" },
+  { id: "j7-3", month: 6, date: 19, title: "新方案评审", type: "方案", priority: "中", time: "10:00" },
+  { id: "j7-4", month: 6, date: 28, title: "月度总结", type: "会议", priority: "低", time: "16:00" },
+  // 八月
+  { id: "j8-1", month: 7, date: 5, title: "三季度规划", type: "会议", priority: "高", time: "09:00" },
+  { id: "j8-2", month: 7, date: 13, title: "厦门出差", type: "出差", priority: "中", time: "全天" },
+  { id: "j8-3", month: 7, date: 21, title: "产品优化方案", type: "方案", priority: "高", time: "14:00" },
+  // 九月
+  { id: "j9-1", month: 8, date: 2, title: "中秋排班会", type: "会议", priority: "低", time: "09:00" },
+  { id: "j9-2", month: 8, date: 10, title: "客户拜访", type: "出差", priority: "中", time: "10:00" },
+  { id: "j9-3", month: 8, date: 18, title: "Q3方案评审", type: "方案", priority: "高", time: "14:00" },
+  { id: "j9-4", month: 8, date: 30, title: "季度复盘", type: "会议", priority: "中", time: "15:00" },
+  // 十月
+  { id: "j10-1", month: 9, date: 8, title: "国庆收心会", type: "会议", priority: "低", time: "09:00" },
+  { id: "j10-2", month: 9, date: 16, title: "南京出差", type: "出差", priority: "高", time: "全天" },
+  { id: "j10-3", month: 9, date: 24, title: "年度方案初稿", type: "方案", priority: "高", time: "10:00" },
+  // 十一月
+  { id: "j11-1", month: 10, date: 4, title: "年终冲刺会", type: "会议", priority: "高", time: "09:00" },
+  { id: "j11-2", month: 10, date: 12, title: "深圳客户回访", type: "出差", priority: "中", time: "全天" },
+  { id: "j11-3", month: 10, date: 20, title: "年终方案评审", type: "方案", priority: "高", time: "14:00" },
+  { id: "j11-4", month: 10, date: 28, title: "月度总结", type: "会议", priority: "低", time: "16:00" },
+  // 十二月
+  { id: "j12-1", month: 11, date: 5, title: "年度总结会", type: "会议", priority: "高", time: "09:00" },
+  { id: "j12-2", month: 11, date: 12, title: "北京年终拜访", type: "出差", priority: "高", time: "全天" },
+  { id: "j12-3", month: 11, date: 20, title: "次年规划方案", type: "方案", priority: "中", time: "10:00" },
+  { id: "j12-4", month: 11, date: 30, title: "跨年值班安排", type: "会议", priority: "低", time: "15:00" },
 ];
 
-const EVENT_TYPE_CONFIG: Record<EventType, { icon: React.ElementType; color: string; bgColor: string }> = {
-  "会议": { icon: CalendarIcon, color: "text-blue-600 dark:text-blue-400", bgColor: "bg-blue-100 dark:bg-blue-900/30" },
-  "出差": { icon: Plane, color: "text-emerald-600 dark:text-emerald-400", bgColor: "bg-emerald-100 dark:bg-emerald-900/30" },
-  "方案": { icon: FileText, color: "text-purple-600 dark:text-purple-400", bgColor: "bg-purple-100 dark:bg-purple-900/30" },
+const EVENT_TYPE_ICONS: Record<EventType, React.ElementType> = {
+  "会议": CalendarIcon,
+  "出差": Plane,
+  "方案": FileText,
 };
 
 // ==================== 大日历看板 ====================
@@ -57,7 +120,7 @@ function BigCalendarBoard() {
     else setCurrentMonth(currentMonth + 1);
   };
 
-  const getEventsForDay = (day: number) => MOCK_EVENTS.filter(e => e.date === day);
+  const getEventsForDay = (day: number) => MOCK_EVENTS.filter(e => e.month === currentMonth && e.date === day);
   const weekDays = ["日", "一", "二", "三", "四", "五", "六"];
 
   return (
@@ -69,12 +132,28 @@ function BigCalendarBoard() {
           </div>
           <div>
             <h3 className="text-lg font-semibold text-foreground">{currentYear}年 {currentMonth + 1}月</h3>
-            <p className="text-xs text-muted-foreground">事项看板 · 会议 / 出差 / 方案</p>
+            <p className="text-xs text-muted-foreground">事项看板 · 按优先级着色</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <button onClick={prevMonth} className="p-2 rounded-lg border border-border hover:bg-muted transition-all"><ChevronLeft size={16} /></button>
-          <button onClick={nextMonth} className="p-2 rounded-lg border border-border hover:bg-muted transition-all"><ChevronRight size={16} /></button>
+        <div className="flex items-center gap-4">
+          {/* 优先级图例 */}
+          <div className="hidden sm:flex items-center gap-3 text-[11px]">
+            {(Object.entries(PRIORITY_CONFIG) as [Priority, typeof PRIORITY_CONFIG[Priority]][]).map(([level, cfg]) => (
+              <div key={level} className={cn("flex items-center gap-1 px-1.5 py-0.5 rounded border", cfg.bg, cfg.border)}>
+                <span className={cn("font-medium", cfg.text)}>{level}优先级</span>
+              </div>
+            ))}
+            <div className="flex items-center gap-1 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-900/30 bg-emerald-50 dark:bg-emerald-950/30">
+              <span className="font-medium text-emerald-600 dark:text-emerald-400">节气</span>
+            </div>
+            <div className="flex items-center gap-1 px-1.5 py-0.5 rounded border border-primary/20 bg-primary/5">
+              <span className="font-medium text-primary/70">农历</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button onClick={prevMonth} className="p-2 rounded-lg border border-border hover:bg-muted transition-all"><ChevronLeft size={16} /></button>
+            <button onClick={nextMonth} className="p-2 rounded-lg border border-border hover:bg-muted transition-all"><ChevronRight size={16} /></button>
+          </div>
         </div>
       </div>
 
@@ -85,61 +164,56 @@ function BigCalendarBoard() {
         ))}
       </div>
 
-      {/* 日历网格 - 使用固定高度填满剩余空间 */}
-      <div className="grid grid-cols-7 gap-1.5 flex-1 min-h-0" style={{ gridTemplateRows: `repeat(${Math.ceil((daysInMonth + firstDay) / 7)}, 1fr)` }}>
+      {/* 日历网格 - 填满剩余空间 */}
+      <div className="grid grid-cols-7 gap-1 flex-1 min-h-0" style={{ gridTemplateRows: `repeat(${Math.ceil((daysInMonth + firstDay) / 7)}, 1fr)` }}>
         {emptyDays.map((i) => (
           <div key={`empty-${i}`} className="rounded-lg" />
         ))}
         {days.map((day) => {
           const isToday = day === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear();
           const dayEvents = getEventsForDay(day);
+          const lunar = solarToLunar(currentYear, currentMonth + 1, day);
+          const solarTerm = getSolarTermForDate(currentYear, currentMonth, day);
+          const isTermDay = solarTerm !== null;
+          const isFirstOfMonth = lunar.day === 1;
 
           return (
             <div
               key={day}
               className={cn(
-                "p-1.5 rounded-lg border flex flex-col gap-0.5 overflow-hidden",
-                isToday ? "border-primary bg-primary/5" : "border-border"
+                "p-2 rounded-lg border flex flex-col gap-0.5 overflow-hidden",
+                isToday ? "border-primary bg-primary/5" : isTermDay ? "border-emerald-300 bg-emerald-50/50 dark:border-emerald-700 dark:bg-emerald-950/20" : "border-border"
               )}
-              style={!isToday ? { background: "var(--surface)" } : {}}
+              style={!isToday ? { background: isTermDay ? undefined : "var(--surface)" } : {}}
             >
               <div className="flex items-center justify-between shrink-0">
-                <span className={cn("text-xs font-medium", isToday ? "text-primary" : "text-foreground")}>{day}</span>
-                {isToday && <span className="text-[9px] px-1 py-0.5 rounded-full bg-primary text-primary-foreground leading-none">今</span>}
+                <div className="flex items-center gap-1.5">
+                  <span className={cn("text-sm font-semibold", isToday ? "text-primary" : "text-foreground")}>{day}</span>
+                  <span className={cn("text-[10px]", isTermDay ? "font-semibold text-emerald-600 dark:text-emerald-400" : isFirstOfMonth ? "font-semibold text-primary/70" : "text-muted-foreground")}>
+                    {isTermDay ? solarTerm : isFirstOfMonth ? lunar.monthName : lunar.dayName}
+                  </span>
+                </div>
+                {isToday && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground leading-none font-medium">今</span>}
               </div>
-              <div className="flex-1 space-y-0.5 overflow-hidden min-h-0">
-                {dayEvents.slice(0, 3).map((event) => {
-                  const config = EVENT_TYPE_CONFIG[event.type];
-                  const Icon = config.icon;
+              <div className="flex-1 space-y-[3px] overflow-y-auto min-h-0">
+                {dayEvents.map((event) => {
+                  const pCfg = PRIORITY_CONFIG[event.priority];
+                  const Icon = EVENT_TYPE_ICONS[event.type];
                   return (
-                    <div key={event.id} className={cn("flex items-center gap-1 px-1 py-0.5 rounded text-[9px] truncate", config.bgColor, config.color)}>
-                      <Icon size={9} className="shrink-0" />
+                    <div key={event.id} className={cn("flex items-center gap-1.5 px-2 py-[3px] rounded text-[11px] border leading-tight", pCfg.bg, pCfg.text, pCfg.border)}>
+                      <Icon size={11} className="shrink-0" />
                       <span className="truncate">{event.title}</span>
+                      {event.time && <span className="text-[9px] opacity-60 shrink-0 ml-auto">{event.time}</span>}
                     </div>
                   );
                 })}
-                {dayEvents.length > 3 && (
-                  <div className="text-[9px] text-muted-foreground pl-1">+{dayEvents.length - 3}</div>
-                )}
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* 图例 */}
-      <div className="mt-3 pt-2 border-t border-border flex items-center gap-4 text-xs shrink-0">
-        <span className="text-muted-foreground">事项类型：</span>
-        {(Object.entries(EVENT_TYPE_CONFIG) as [EventType, typeof EVENT_TYPE_CONFIG[EventType]][]).map(([type, config]) => {
-          const Icon = config.icon;
-          return (
-            <div key={type} className="flex items-center gap-1.5">
-              <div className={cn("p-1 rounded", config.bgColor)}><Icon size={12} className={config.color} /></div>
-              <span className="text-foreground">{type}</span>
-            </div>
-          );
-        })}
-      </div>
+      {/* 图例已移至顶部 */}
     </div>
   );
 }
@@ -361,7 +435,21 @@ function SharedMemosFull() {
       {/* 添加区域 */}
       {isAdding && (
         <div className="mb-4 p-3 rounded-lg border border-border shrink-0 animate-in fade-in slide-in-from-top-2 duration-200" style={{ background: "var(--surface-2)" }}>
-          <textarea ref={inputRef} value={newContent} onChange={(e) => setNewContent(e.target.value.slice(0, 300))} placeholder="输入备忘录内容..." rows={2} className="w-full px-3 py-2 rounded text-sm outline-none resize-none mb-2" style={{ background: "var(--input)", border: "1px solid var(--border)" }} />
+          <textarea
+            ref={inputRef}
+            value={newContent}
+            onChange={(e) => setNewContent(e.target.value.slice(0, 300))}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleAddMemo();
+              }
+            }}
+            placeholder="输入备忘录内容...（Enter 发送，Shift+Enter 换行）"
+            rows={2}
+            className="w-full px-3 py-2 rounded text-sm outline-none resize-none mb-2"
+            style={{ background: "var(--input)", border: "1px solid var(--border)" }}
+          />
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1">
@@ -380,11 +468,12 @@ function SharedMemosFull() {
             <div className="flex items-center gap-2">
               <span className="text-[10px] text-muted-foreground">{newContent.length}/300</span>
               <button onClick={() => setIsAdding(false)} className="px-2 py-1.5 rounded text-xs text-muted-foreground hover:bg-muted">取消</button>
-              <button onClick={handleAddMemo} disabled={!newContent.trim()} className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-all disabled:opacity-50">
+              <button onClick={handleAddMemo} disabled={!newContent.trim()} className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-50">
                 <Plus size={14} /> 添加
               </button>
             </div>
           </div>
+          <p className="text-[10px] text-muted-foreground mt-1.5">按 Enter 快速发布，Shift+Enter 换行</p>
         </div>
       )}
 
@@ -449,30 +538,23 @@ function SharedMemosFull() {
   );
 }
 
-// ==================== 个人行动备忘录 ====================
+// ==================== 个人行动备忘录（共享数据版本） ====================
 function PersonalMemosFull() {
-  const [memos, setMemos] = useState([
-    { id: "1", content: "整理本周项目周报", completed: false },
-    { id: "2", content: "客户 Demo 演示排练", completed: false },
-    { id: "3", content: "合作商合同条款确认", completed: true },
-    { id: "4", content: "更新项目进度报告", completed: false },
-  ]);
+  const { memos, loading, addMemo, toggleMemo, deleteMemo } = usePersonalMemos();
   const [newMemo, setNewMemo] = useState("");
 
-  const addMemo = () => {
+  const handleAddMemo = () => {
     if (!newMemo.trim()) return;
-    setMemos([{ id: Date.now().toString(), content: newMemo, completed: false }, ...memos]);
+    addMemo(newMemo.trim());
     setNewMemo("");
-    toast.success("备忘录已添加");
   };
 
-  const toggleMemo = (id: string) => {
-    setMemos(memos.map(m => m.id === id ? { ...m, completed: !m.completed } : m));
+  const handleToggleMemo = (id: string) => {
+    toggleMemo(id);
   };
 
-  const deleteMemo = (id: string) => {
-    setMemos(memos.filter(m => m.id !== id));
-    toast.success("已删除");
+  const handleDeleteMemo = (id: string) => {
+    deleteMemo(id);
   };
 
   return (
@@ -495,26 +577,31 @@ function PersonalMemosFull() {
           <input
             value={newMemo}
             onChange={(e) => setNewMemo(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") addMemo(); }}
-            placeholder="添加新的待办事项..."
+            onKeyDown={(e) => { if (e.key === "Enter") handleAddMemo(); }}
+            placeholder="输入待办事项...（Enter 快速添加）"
             className="flex-1 px-3 py-2 rounded text-sm outline-none"
             style={{ background: "var(--input)", border: "1px solid var(--border)" }}
           />
-          <button onClick={addMemo} disabled={!newMemo.trim()} className="flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-all disabled:opacity-50">
+          <button
+            onClick={handleAddMemo}
+            disabled={!newMemo.trim()}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             <Plus size={14} /> 添加
           </button>
         </div>
+        <p className="text-[10px] text-muted-foreground mt-1.5 ml-1">按 Enter 快速添加，或点击右侧按钮发布</p>
       </div>
 
       {/* 列表 */}
       <div className="flex-1 overflow-auto space-y-2 min-h-0">
         {memos.map((memo) => (
           <div key={memo.id} className="group flex items-center gap-3 p-3 rounded-lg border border-border transition-all hover:bg-muted/30" style={{ background: "var(--surface)" }}>
-            <button onClick={() => toggleMemo(memo.id)} className={cn("w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-all", memo.completed ? "bg-primary border-primary" : "border-muted-foreground/30 hover:border-primary")}>
+            <button onClick={() => handleToggleMemo(memo.id)} className={cn("w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-all", memo.completed ? "bg-primary border-primary" : "border-muted-foreground/30 hover:border-primary")}>
               {memo.completed && <Check size={12} className="text-primary-foreground" />}
             </button>
             <span className={cn("text-sm flex-1", memo.completed ? "line-through text-muted-foreground" : "text-foreground")}>{memo.content}</span>
-            <button onClick={() => deleteMemo(memo.id)} className="opacity-0 group-hover:opacity-100 p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-red-500 transition-all">
+            <button onClick={() => handleDeleteMemo(memo.id)} className="opacity-0 group-hover:opacity-100 p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-red-500 transition-all">
               <Trash2 size={14} />
             </button>
           </div>
@@ -551,11 +638,11 @@ export function CalendarDetailPanel({ isOpen, onClose }: CalendarDetailPanelProp
   ];
 
   return (
-    <div className="fixed inset-0 z-[9998] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[9998] flex items-center justify-center">
       <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-6xl h-[90vh] rounded-xl border border-border shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200" style={{ background: "var(--surface)" }}>
+      <div className="relative w-full h-full m-0 rounded-none border-0 shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200" style={{ background: "var(--surface)" }}>
         {/* 头部 */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border shrink-0">
+        <div className="flex items-center justify-between px-6 py-2.5 border-b border-border shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-primary/10"><CalendarIcon size={24} className="text-primary" /></div>
             <div>
@@ -567,7 +654,7 @@ export function CalendarDetailPanel({ isOpen, onClose }: CalendarDetailPanelProp
         </div>
 
         {/* Tab 导航 */}
-        <div className="flex items-center gap-1 px-6 py-3 border-b border-border bg-muted/30 shrink-0">
+        <div className="flex items-center gap-1 px-6 py-2 border-b border-border bg-muted/30 shrink-0">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
@@ -579,7 +666,7 @@ export function CalendarDetailPanel({ isOpen, onClose }: CalendarDetailPanelProp
         </div>
 
         {/* 内容区域 - 填满剩余空间 */}
-        <div className="flex-1 overflow-hidden p-6 min-h-0">
+        <div className="flex-1 overflow-hidden p-4 min-h-0">
           {activeTab === "calendar" && <BigCalendarBoard />}
           {activeTab === "notes" && <TeamNotesFull />}
           {activeTab === "memos" && <SharedMemosFull />}

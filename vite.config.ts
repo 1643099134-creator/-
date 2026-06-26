@@ -23,9 +23,13 @@ export default defineConfig({
     port: 3015,
     strictPort: true,
     allowedHosts: true,
-    // HMR 默认关闭：沙筆预览 iframe 下 HMR 的整页 reload 会放大任何 transform error
-    // 如需热更，改为: hmr: { clientPort: 443, protocol: 'wss' }
     hmr: false,
+    proxy: {
+      "/api": {
+        target: "http://localhost:3016",
+        changeOrigin: true,
+      },
+    },
   },
   build: {
     outDir: "dist",

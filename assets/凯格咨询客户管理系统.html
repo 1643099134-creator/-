@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>凯格咨询客户管理系统</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .search-box {
+            flex: 1;
+            min-width: 300px;
+            display: flex;
+        }
+        .search-box input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px 0 0 4px;
+        }
+        .search-box button {
+            padding: 10px 15px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        .btn-add {
+            background: #2ecc71;
+            color: white;
+        }
+        .btn-export {
+            background: #9b59b6;
+            color: white;
+        }
+        .btn-save {
+            background: #3498db;
+            color: white;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            position: sticky;
+            top: 0;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        .action-cell {
+            white-space: nowrap;
+        }
+        .action-cell button {
+            padding: 5px 10px;
+            margin-right: 5px;
+        }
+        .btn-edit {
+            background: #f39c12;
+            color: white;
+        }
+        .btn-delete {
+            background: #e74c3c;
+            color: white;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 500px;
+            max-width: 90%;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .status-completed {
+            color: #2ecc71;
+            font-weight: bold;
+        }
+        .status-follow {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .status-serving {
+            color: #3498db;
+            font-weight: bold;
+        }
+        .pagination {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        .pagination button {
+            background: #95a5a6;
+            color: white;
+        }
+        .pagination button.active {
+            background: #34495e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>凯格咨询客户管理系统</h1>
+        
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="搜索客户名称、行业、项目...">
+                <button onclick="searchCustomers()">搜索</button>
+            </div>
+            <div class="action-buttons">
+                <button class="btn-add" onclick="openAddModal()">添加客户</button>
+                <button class="btn-export" onclick="exportToHTML()">导出HTML</button>
+                <button class="btn-export" onclick="exportToExcel()">导出Excel</button>
+                <button class="btn-save" onclick="saveData()">保存数据</button>
+            </div>
+        </div>
+        
+        <div style="overflow-x: auto;">
+            <table id="customerTable">
+                <thead>
+                    <tr>
+                        <th>时间</th>
+                        <th>行业</th>
+                        <th>客户名称</th>
+                        <th>培训内容</th>
+                        <th>服务时间</th>
+                        <th>客户周期</th>
+                        <th>后续跟进</th>
+                        <th>渠道</th>
+                        <th>企业对接人</th>
+                        <th>负责人</th>
+                        <th>项目开展时间</th>
+                        <th>机构端备注</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="customerTableBody">
+                    <!-- 数据将通过JavaScript动态填充 -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="pagination" id="pagination">
+            <!-- 分页控件将通过JavaScript动态生成 -->
+        </div>
+    </div>
+    
+    <!-- 添加/编辑客户的模态框 -->
+    <div class="modal" id="customerModal">
+        <div class="modal-content">
+            <h2 id="modalTitle">添加客户</h2>
+            <form id="customerForm">
+                <div class="form-group">
+                    <label for="time">时间</label>
+                    <input type="text" id="time" required>
+                </div>
+                <div class="form-group">
+                    <label for="industry">行业</label>
+                    <select id="industry">
+                        <option value="银行业">银行业</option>
+                        <option value="央国企">央国企</option>
+                        <option value="私企">私企</option>
+                        <option value="连锁企业">连锁企业</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="customerName">客户名称</label>
+                    <input type="text" id="customerName" required>
+                </div>
+                <div class="form-group">
+                    <label for="trainingContent">培训内容</label>
+                    <textarea id="trainingContent" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="serviceTime">服务时间</label>
+                    <input type="text" id="serviceTime">
+                </div>
+                <div class="form-group">
+                    <label for="customerCycle">客户周期</label>
+                    <select id="customerCycle">
+                        <option value="完成">完成</option>
+                        <option value="待跟进">待跟进</option>
+                        <option value="服务中">服务中</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="followUp">后续跟进情况</label>
+                    <textarea id="followUp" rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="channel">渠道</label>
+                    <input type="text" id="channel">
+                </div>
+                <div class="form-group">
+                    <label for="contactPerson">企业对接人</label>
+                    <input type="text" id="contactPerson">
+                </div>
+                <div class="form-group">
+                    <label for="responsiblePerson">负责人</label>
+                    <input type="text" id="responsiblePerson">
+                </div>
+                <div class="form-group">
+                    <label for="projectTime">项目开展时间</label>
+                    <input type="text" id="projectTime">
+                </div>
+                <div class="form-group">
+                    <label for="remarks">机构端备注</label>
+                    <textarea id="remarks" rows="2"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" onclick="closeModal()">取消</button>
+                    <button type="submit">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 初始客户数据（从Excel提取）
+        let customers = [
+            {时间: "2024及之前培训", 行业: "银行业", 客户名称: "中信银行", 培训内容: "《商务礼仪培训》", 服务时间: "2019", 客户周期: "完成", 后续跟进: "", 渠道: "", 企业对接人: "", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "银行业", 客户名称: "桂林银行", 培训内容: "《礼仪大赛赛前指导》", 服务时间: "", 客户周期: "完成", 后续跟进: "", 渠道: "", 企业对接人: "", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "银行业", 客户名称: "光大证券", 培训内容: "《公关营销》", 服务时间: "", 客户周期: "完成", 后续跟进: "", 渠道: "", 企业对接人: "", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "银行业", 客户名称: "华夏银行", 培训内容: "第一期《岗位经验内化与内训师体系建设》\n第二期《学习地图开发》\n《人工智能培训第一期》\n《客户经理AI培训第二期》\n《客户经理AI培训第三期》", 服务时间: "", 客户周期: "完成", 后续跟进: "", 渠道: "", 企业对接人: "庞总", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "银行业", 客户名称: "桂平桂银村镇银行", 培训内容: "《执行力与下属激励》\n《SWOT分析与银行系统绩效考核》", 服务时间: "", 客户周期: "完成", 后续跟进: "", 渠道: "", 企业对接人: "", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "银行业", 客户名称: "陆川农村商业银行", 培训内容: "《礼仪大赛指导》", 服务时间: "", 客户周期: "完成", 后续跟进: "", 渠道: "", 企业对接人: "", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "银行业", 客户名称: "北部湾银行", 培训内容: "拍摄了《服务礼仪宣传片》\n培训了《服务礼仪》", 服务时间: "", 客户周期: "完成", 后续跟进: "", 渠道: "", 企业对接人: "", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "银行业", 客户名称: "浦发银行", 培训内容: "《银行员工拓展培训》", 服务时间: "", 客户周期: "完成", 后续跟进: "", 渠道: "", 企业对接人: "", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "银行业", 客户名称: "渤海银行", 培训内容: "", 服务时间: "", 客户周期: "待跟进", 后续跟进: "", 渠道: "", 企业对接人: "朱行", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "银行业", 客户名称: "浙商银行", 培训内容: "", 服务时间: "", 客户周期: "待跟进", 后续跟进: "", 渠道: "泽仪", 企业对接人: "", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "银行业", 客户名称: "防城港农商行", 培训内容: "", 服务时间: "", 客户周期: "待跟进", 后续跟进: "", 渠道: "", 企业对接人: "覃若鹏", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "银行业", 客户名称: "中国银行防城港分行", 培训内容: "", 服务时间: "", 客户周期: "待跟进", 后续跟进: "", 渠道: "", 企业对接人: "邹智", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "央国企", 客户名称: "太平人寿保险公司", 培训内容: "《高级定制形象管理》", 服务时间: "", 客户周期: "完成", 后续跟进: "", 渠道: "", 企业对接人: "", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "央国企", 客户名称: "中建交通", 培训内容: "《商务礼仪》", 服务时间: "", 客户周期: "完成", 后续跟进: "", 渠道: "", 企业对接人: "", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "央国企", 客户名称: "中建五局", 培训内容: "在深圳培训了《会务管理与实操》\n在南宁培训了《个人执行力与工作效率提升》", 服务时间: "", 客户周期: "完成", 后续跟进: "", 渠道: "", 企业对接人: "", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "央国企", 客户名称: "中国广核集团有限公司", 培训内容: "《商务接待与宴请礼仪》", 服务时间: "", 客户周期: "完成", 后续跟进: "", 渠道: "", 企业对接人: "", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "央国企", 客户名称: "广西环投集团", 培训内容: "《商务形象礼仪》", 服务时间: "", 客户周期: "完成", 后续跟进: "", 渠道: "", 企业对接人: "", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "央国企", 客户名称: "广西绿城水务股份有限公司", 培训内容: "", 服务时间: "", 客户周期: "待跟进", 后续跟进: "", 渠道: "", 企业对接人: "", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "央国企", 客户名称: "中国电信服务的政府单位", 培训内容: "", 服务时间: "", 客户周期: "待跟进", 后续跟进: "", 渠道: "", 企业对接人: "", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "央国企", 客户名称: "广西出版传媒集团", 培训内容: "", 服务时间: "", 客户周期: "待跟进", 后续跟进: "", 渠道: "", 企业对接人: "", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "央国企", 客户名称: "广西路建工程集团有限公司", 培训内容: "", 服务时间: "", 客户周期: "待跟进", 后续跟进: "", 渠道: "", 企业对接人: "", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "央国企", 客户名称: "东兰国投", 培训内容: "《高效沟通与工作效率提升》\n《职业素养与商务礼仪》\n《短视频新媒体》", 服务时间: "", 客户周期: "完成", 后续跟进: "", 渠道: "", 企业对接人: "", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "央国企", 客户名称: "中碳航投新能源", 培训内容: "《大客户公共关系》", 服务时间: "", 客户周期: "完成", 后续跟进: "", 渠道: "", 企业对接人: "", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "央国企", 客户名称: "中国通服", 培训内容: "《商务礼仪》\n《魅力演说》\n《档案管理培训》\n《会务管理》", 服务时间: "", 客户周期: "完成", 后续跟进: "", 渠道: "", 企业对接人: "", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "央国企", 客户名称: "广西演出公司", 培训内容: "《演出服务与接待礼仪》", 服务时间: "", 客户周期: "完成", 后续跟进: "", 渠道: "", 企业对接人: "", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "央国企", 客户名称: "广西旅发集团", 培训内容: "《客户服务专题培训》\n《景区服务质量提升》", 服务时间: "", 客户周期: "完成", 后续跟进: "", 渠道: "", 企业对接人: "", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "央国企", 客户名称: "自贸区医院", 培训内容: "《员工拓展培训》\n《人工智能课程》\n《短视频课程》", 服务时间: "", 客户周期: "完成", 后续跟进: "", 渠道: "", 企业对接人: "", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "私企", 客户名称: "塔易公司", 培训内容: "", 服务时间: "", 客户周期: "待跟进", 后续跟进: "", 渠道: "", 企业对接人: "", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "私企", 客户名称: "卡迪亚科技", 培训内容: "《中层领导拓展培训与商务宴请礼仪》", 服务时间: "", 客户周期: "完成", 后续跟进: "", 渠道: "", 企业对接人: "", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "私企", 客户名称: "桂物智慧AI", 培训内容: "", 服务时间: "", 客户周期: "待跟进", 后续跟进: "", 渠道: "", 企业对接人: "", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "私企", 客户名称: "恰货铺子", 培训内容: "", 服务时间: "", 客户周期: "待跟进", 后续跟进: "", 渠道: "刘双", 企业对接人: "", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "私企", 客户名称: "西部同泰集团", 培训内容: "《商务社交礼仪》", 服务时间: "", 客户周期: "完成", 后续跟进: "", 渠道: "", 企业对接人: "", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "私企", 客户名称: "竟葛琳克幼儿园", 培训内容: "《幼儿教师形象礼仪课程》", 服务时间: "", 客户周期: "完成", 后续跟进: "", 渠道: "", 企业对接人: "", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "私企", 客户名称: "七星路第一幼儿园", 培训内容: "《职场礼仪》", 服务时间: "", 客户周期: "完成", 后续跟进: "", 渠道: "", 企业对接人: "", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "私企", 客户名称: "宝马汽车公司", 培训内容: "《营销精英形象礼仪》", 服务时间: "", 客户周期: "完成", 后续跟进: "", 渠道: "吴运黎", 企业对接人: "", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "私企", 客户名称: "吉利汽车", 培训内容: "《职场形象礼仪》", 服务时间: "", 客户周期: "完成", 后续跟进: "", 渠道: "", 企业对接人: "", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "私企", 客户名称: "路虎捷豹品牌", 培训内容: "《LADY FIRST 女性形象力》", 服务时间: "", 客户周期: "完成", 后续跟进: "", 渠道: "", 企业对接人: "", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "连锁企业", 客户名称: "瑞柏美", 培训内容: "《服务标准化》", 服务时间: "", 客户周期: "服务中", 后续跟进: "", 渠道: "", 企业对接人: "", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "连锁企业", 客户名称: "老凤祥", 培训内容: "《服务标准化》", 服务时间: "", 客户周期: "服务中", 后续跟进: "", 渠道: "", 企业对接人: "", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "连锁企业", 客户名称: "究艾堂", 培训内容: "《服务质量提升》", 服务时间: "", 客户周期: "服务中", 后续跟进: "", 渠道: "", 企业对接人: "周总", 负责人: "", 项目开展时间: "", 机构端备注: ""},
+            {时间: "2024及之前培训", 行业: "连锁企业", 客户名称: "Tiger Tiger会所", 培训内容: "《包厢管家礼仪服务流程标准化》", 服务时间: "", 客户周期: "完成", 后续跟进: "", 渠道: "", 企业对接人: "", 负责人: "", 项目开展时间: "", 机构端备注: ""}
+        ];
+
+        // 当前编辑的客户索引
+        let currentEditIndex = -1;
+        // 每页显示的行数
+        const rowsPerPage = 10;
+        // 当前页码
+        let currentPage = 1;
+        // 过滤后的客户数据（用于搜索）
+        let filteredCustomers = [];
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+            renderTable();
+            setupPagination();
+            
+            // 设置表单提交事件
+            document.getElementById('customerForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveCustomer();
+            });
+        });
+
+        // 从localStorage加载数据
+        function loadData() {
+            const savedData = localStorage.getItem('customerData');
+            if (savedData) {
+                customers = JSON.parse(savedData);
+            }
+            filteredCustomers = [...customers];
+        }
+
+        // 保存数据到localStorage
+        function saveData() {
+            localStorage.setItem('customerData', JSON.stringify(customers));
+            alert('数据已成功保存！');
+        }
+
+        // 渲染表格
+        function renderTable() {
+            const tableBody = document.getElementById('customerTableBody');
+            tableBody.innerHTML = '';
+            
+            const startIndex = (currentPage - 1) * rowsPerPage;
+            const endIndex = Math.min(startIndex + rowsPerPage, filteredCustomers.length);
+            
+            for (let i = startIndex; i < endIndex; i++) {
+                const customer = filteredCustomers[i];
+                const row = document.createElement('tr');
+                
+                // 根据客户周期设置样式类
+                let statusClass = '';
+                if (customer.客户周期 === '完成') {
+                    statusClass = 'status-completed';
+                } else if (customer.客户周期 === '待跟进') {
+                    statusClass = 'status-follow';
+                } else if (customer.客户周期 === '服务中') {
+                    statusClass = 'status-serving';
+                }
+                
+                row.innerHTML = `
+                    <td>${customer.时间 || ''}</td>
+                    <td>${customer.行业 || ''}</td>
+                    <td>${customer.客户名称 || ''}</td>
+                    <td>${customer.培训内容 ? customer.培训内容.replace(/\n/g, '<br>') : ''}</td>
+                    <td>${customer.服务时间 || ''}</td>
+                    <td class="${statusClass}">${customer.客户周期 || ''}</td>
+                    <td>${customer.后续跟进 || ''}</td>
+                    <td>${customer.渠道 || ''}</td>
+                    <td>${customer.企业对接人 || ''}</td>
+                    <td>${customer.负责人 || ''}</td>
+                    <td>${customer.项目开展时间 || ''}</td>
+                    <td>${customer.机构端备注 || ''}</td>
+                    <td class="action-cell">
+                        <button class="btn-edit" onclick="editCustomer(${i})">编辑</button>
+                        <button class="btn-delete" onclick="deleteCustomer(${i})">删除</button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            }
+            
+            // 更新分页控件
+            setupPagination();
+        }
+
+        // 设置分页控件
+        function setupPagination() {
+            const paginationDiv = document.getElementById('pagination');
+            paginationDiv.innerHTML = '';
+            
+            const pageCount = Math.ceil(filteredCustomers.length / rowsPerPage);
+            
+            if (pageCount <= 1) return;
+            
+            // 添加上一页按钮
+            const prevButton = document.createElement('button');
+            prevButton.innerText = '上一页';
+            prevButton.disabled = currentPage === 1;
+            prevButton.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderTable();
+                }
+            });
+            paginationDiv.appendChild(prevButton);
+            
+            // 添加页码按钮
+            for (let i = 1; i <= pageCount; i++) {
+                const pageButton = document.createElement('button');
+                pageButton.innerText = i;
+                pageButton.classList.toggle('active', i === currentPage);
+                pageButton.addEventListener('click', () => {
+                    currentPage = i;
+                    renderTable();
+                });
+                paginationDiv.appendChild(pageButton);
+            }
+            
+            // 添加下一页按钮
+            const nextButton = document.createElement('button');
+            nextButton.innerText = '下一页';
+            nextButton.disabled = currentPage === pageCount;
+            nextButton.addEventListener('click', () => {
+                if (currentPage < pageCount) {
+                    currentPage++;
+                    renderTable();
+                }
+            });
+            paginationDiv.appendChild(nextButton);
+        }
+
+        // 搜索客户
+        function searchCustomers() {
+            const searchText = document.getElementById('searchInput').value.toLowerCase();
+            
+            if (!searchText) {
+                filteredCustomers = [...customers];
+            } else {
+                filteredCustomers = customers.filter(customer => {
+                    return (
+                        (customer.客户名称 && customer.客户名称.toLowerCase().includes(searchText)) ||
+                        (customer.行业 && customer.行业.toLowerCase().includes(searchText)) ||
+                        (customer.培训内容 && customer.培训内容.toLowerCase().includes(searchText)) ||
+                        (customer.企业对接人 && customer.企业对接人.toLowerCase().includes(searchText)) ||
+                        (customer.客户周期 && customer.客户周期.toLowerCase().includes(searchText))
+                    );
+                });
+            }
+            
+            currentPage = 1;
+            renderTable();
+        }
+
+        // 打开添加模态框
+        function openAddModal() {
+            currentEditIndex = -1;
+            document.getElementById('modalTitle').innerText = '添加客户';
+            document.getElementById('customerForm').reset();
+            document.getElementById('customerModal').style.display = 'flex';
+        }
+
+        // 编辑客户
+        function editCustomer(index) {
+            // 计算全局索引（考虑分页和搜索）
+            const globalIndex = customers.findIndex(c => 
+                c.客户名称 === filteredCustomers[index].客户名称 && 
+                c.培训内容 === filteredCustomers[index].培训内容
+            );
+            
+            if (globalIndex === -1) return;
+            
+            currentEditIndex = globalIndex;
+            const customer = customers[globalIndex];
+            
+            document.getElementById('modalTitle').innerText = '编辑客户';
+            document.getElementById('time').value = customer.时间 || '';
+            document.getElementById('industry').value = customer.行业 || '';
+            document.getElementById('customerName').value = customer.客户名称 || '';
+            document.getElementById('trainingContent').value = customer.培训内容 || '';
+            document.getElementById('serviceTime').value = customer.服务时间 || '';
+            document.getElementById('customerCycle').value = customer.客户周期 || '';
+            document.getElementById('followUp').value = customer.后续跟进 || '';
+            document.getElementById('channel').value = customer.渠道 || '';
+            document.getElementById('contactPerson').value = customer.企业对接人 || '';
+            document.getElementById('responsiblePerson').value = customer.负责人 || '';
+            document.getElementById('projectTime').value = customer.项目开展时间 || '';
+            document.getElementById('remarks').value = customer.机构端备注 || '';
+            
+            document.getElementById('customerModal').style.display = 'flex';
+        }
+
+        // 保存客户（添加或更新）
+        function saveCustomer() {
+            const customer = {
+                时间: document.getElementById('time').value,
+                行业: document.getElementById('industry').value,
+                客户名称: document.getElementById('customerName').value,
+                培训内容: document.getElementById('trainingContent').value,
+                服务时间: document.getElementById('serviceTime').value,
+                客户周期: document.getElementById('customerCycle').value,
+                后续跟进: document.getElementById('followUp').value,
+                渠道: document.getElementById('channel').value,
+                企业对接人: document.getElementById('contactPerson').value,
+                负责人: document.getElementById('responsiblePerson').value,
+                项目开展时间: document.getElementById('projectTime').value,
+                机构端备注: document.getElementById('remarks').value
+            };
+            
+            if (currentEditIndex === -1) {
+                // 添加新客户
+                customers.push(customer);
+            } else {
+                // 更新现有客户
+                customers[currentEditIndex] = customer;
+            }
+            
+            saveData();
+            closeModal();
+            // 重新应用搜索过滤
+            searchCustomers();
+        }
+
+        // 删除客户
+        function deleteCustomer(index) {
+            // 计算全局索引
+            const globalIndex = customers.findIndex(c => 
+                c.客户名称 === filteredCustomers[index].客户名称 && 
+                c.培训内容 === filteredCustomers[index].培训内容
+            );
+            
+            if (globalIndex === -1) return;
+            
+            if (confirm('确定要删除这个客户吗？')) {
+                customers.splice(globalIndex, 1);
+                saveData();
+                // 重新应用搜索过滤
+                searchCustomers();
+            }
+        }
+
+        // 关闭模态框
+        function closeModal() {
+            document.getElementById('customerModal').style.display = 'none';
+        }
+
+        // 导出为HTML
+        function exportToHTML() {
+            let htmlContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>客户数据导出</title>
+                    <style>
+                        body { font-family: sans-serif; }
+                        table { border-collapse: collapse; width: 100%; }
+                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                        th { background-color: #f2f2f2; }
+                        tr:nth-child(even) { background-color: #f9f9f9; }
+                    </style>
+                </head>
+                <body>
+                    <h1>凯格咨询客户数据导出</h1>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>时间</th>
+                                <th>行业</th>
+                                <th>客户名称</th>
+                                <th>培训内容</th>
+                                <th>服务时间</th>
+                                <th>客户周期</th>
+                                <th>后续跟进</th>
+                                <th>渠道</th>
+                                <th>企业对接人</th>
+                                <th>负责人</th>
+                                <th>项目开展时间</th>
+                                <th>机构端备注</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            customers.forEach(customer => {
+                htmlContent += `
+                    <tr>
+                        <td>${customer.时间 || ''}</td>
+                        <td>${customer.行业 || ''}</td>
+                        <td>${customer.客户名称 || ''}</td>
+                        <td>${customer.培训内容 ? customer.培训内容.replace(/\n/g, '<br>') : ''}</td>
+                        <td>${customer.服务时间 || ''}</td>
+                        <td>${customer.客户周期 || ''}</td>
+                        <td>${customer.后续跟进 || ''}</td>
+                        <td>${customer.渠道 || ''}</td>
+                        <td>${customer.企业对接人 || ''}</td>
+                        <td>${customer.负责人 || ''}</td>
+                        <td>${customer.项目开展时间 || ''}</td>
+                        <td>${customer.机构端备注 || ''}</td>
+                    </tr>
+                `;
+            });
+            
+            htmlContent += `
+                        </tbody>
+                    </table>
+                </body>
+                </html>
+            `;
+            
+            // 创建下载链接
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = '客户数据导出.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // 导出为Excel
+        function exportToExcel() {
+            // 创建Excel内容
+            let excelContent = "时间\t行业\t客户名称\t培训内容\t服务时间\t客户周期\t后续跟进\t渠道\t企业对接人\t负责人\t项目开展时间\t机构端备注\n";
+            
+            customers.forEach(customer => {
+                excelContent += `
+                    ${customer.时间 || ''}\t
+                    ${customer.行业 || ''}\t
+                    ${customer.客户名称 || ''}\t
+                    ${customer.培训内容 ? customer.培训内容.replace(/\n/g, '; ') : ''}\t
+                    ${customer.服务时间 || ''}\t
+                    ${customer.客户周期 || ''}\t
+                    ${customer.后续跟进 || ''}\t
+                    ${customer.渠道 || ''}\t
+                    ${customer.企业对接人 || ''}\t
+                    ${customer.负责人 || ''}\t
+                    ${customer.项目开展时间 || ''}\t
+                    ${customer.机构端备注 || ''}
+                `.replace(/\s+/g, ' ') + '\n';
+            });
+            
+            // 创建下载链接
+            const blob = new Blob([excelContent], { type: 'application/vnd.ms-excel' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = '客户数据导出.xls';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>

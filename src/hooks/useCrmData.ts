@@ -1,50 +1,81 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { customersData, calculateCrmStats, type CrmStats, type Customer } from "@/lib/crmData";
 
-// 10分钟 = 600000毫秒
-const REFRESH_INTERVAL = 10 * 60 * 1000;
+const API_BASE = "/api";
+const CRM_STORAGE_KEY = "customerData";
+
+async function fetchCustomersFromAPI(): Promise<Customer[] | null> {
+  try {
+    const res = await fetch(`${API_BASE}/customers`);
+    if (!res.ok) throw new Error("API error");
+    const json = await res.json();
+    if (json.data && Array.isArray(json.data)) return json.data as Customer[];
+  } catch { /* API 不可用时回退 */ }
+  return null;
+}
+
+function loadCustomersFromStorage(): Customer[] {
+  try {
+    const raw = localStorage.getItem(CRM_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed as Customer[];
+    }
+  } catch { /* ignore */ }
+  return customersData;
+}
 
 export function useCrmData() {
-  const [customers, setCustomers] = useState<Customer[]>(customersData);
-  const [stats, setStats] = useState<CrmStats>(() => calculateCrmStats(customersData));
+  const [customers, setCustomers] = useState<Customer[]>(loadCustomersFromStorage);
+  const [stats, setStats] = useState<CrmStats>(() => calculateCrmStats(loadCustomersFromStorage()));
   const [isLoading, setIsLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const esRef = useRef<EventSource | null>(null);
 
-  // 刷新数据函数
+  const updateData = useCallback((data: Customer[]) => {
+    setCustomers(data);
+    setStats(calculateCrmStats(data));
+    setLastUpdated(new Date());
+    try { localStorage.setItem(CRM_STORAGE_KEY, JSON.stringify(data)); } catch { /* ignore */ }
+  }, []);
+
   const refreshData = useCallback(async () => {
     setIsLoading(true);
     try {
-      // 模拟从外部源获取数据
-      // 实际应用中这里会调用API获取最新数据
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // 重新计算统计数据
-      const newStats = calculateCrmStats(customers);
-      setStats(newStats);
-      setLastUpdated(new Date());
+      const apiData = await fetchCustomersFromAPI();
+      updateData(apiData || loadCustomersFromStorage());
     } finally {
       setIsLoading(false);
     }
-  }, [customers]);
+  }, [updateData]);
 
-  // 初始加载和定时刷新
+  // 1. 初始加载
+  useEffect(() => { refreshData(); }, [refreshData]);
+
+  // 2. SSE 实时监听
   useEffect(() => {
-    // 初始加载
-    refreshData();
-
-    // 每10分钟自动刷新
-    const intervalId = setInterval(() => {
-      refreshData();
-    }, REFRESH_INTERVAL);
-
-    return () => clearInterval(intervalId);
+    const connectSSE = () => {
+      const es = new EventSource(`${API_BASE}/events`);
+      esRef.current = es;
+      es.addEventListener("customers_updated", () => refreshData());
+      es.onerror = () => { es.close(); setTimeout(connectSSE, 5000); };
+    };
+    connectSSE();
+    return () => { esRef.current?.close(); };
   }, [refreshData]);
 
-  return {
-    customers,
-    stats,
-    isLoading,
-    lastUpdated,
-    refreshData,
-  };
+  // 3. 页面焦点刷新
+  useEffect(() => {
+    const h = () => refreshData();
+    window.addEventListener("focus", h);
+    return () => window.removeEventListener("focus", h);
+  }, [refreshData]);
+
+  // 4. 10分钟定时刷新
+  useEffect(() => {
+    const id = setInterval(refreshData, 10 * 60 * 1000);
+    return () => clearInterval(id);
+  }, [refreshData]);
+
+  return { customers, stats, isLoading, lastUpdated, refreshData };
 }

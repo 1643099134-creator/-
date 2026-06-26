@@ -35,6 +35,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useTeamNotes } from "@/hooks/useTeamNotes";
 import { useSharedMemos } from "@/hooks/useSharedMemos";
+import { usePersonalMemos } from "@/hooks/usePersonalMemos";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -235,7 +236,7 @@ function DataDashboard() {
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            实时同步
+            自动同步中
           </div>
         </div>
       </div>
@@ -361,58 +362,8 @@ const mapDbCustomerToLocal = (c: any): Customer => ({
 });
 
 function CustomerLifecyclePanel() {
+  const { customers: localData, isLoading, lastUpdated, refreshData } = useCrmData();
   const [filter, setFilter] = useState<CycleFilter>("all");
-  const [localData, setLocalData] = useState<Customer[]>(customersData);
-  const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
-
-  // 从数据库加载全部数据
-  const loadAllData = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("customers")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-
-      if (data && data.length > 0) {
-        const mapped = data.map(mapDbCustomerToLocal);
-        setLocalData(mapped);
-      }
-    } catch (err) {
-      console.error("加载数据失败:", err);
-    }
-  };
-
-  // 初始化加载 + Realtime 订阅
-  useEffect(() => {
-    // 首次加载全部数据
-    loadAllData();
-
-    // 订阅 customers 表的实时变更
-    const channel = supabase
-      .channel("customers_realtime")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "customers" },
-        () => {
-          // 任何 INSERT/UPDATE/DELETE 都重新拉取全量数据
-          loadAllData();
-        }
-      )
-      .subscribe((status: string) => {
-        if (status === "SUBSCRIBED") {
-          setIsRealtimeConnected(true);
-        } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
-          setIsRealtimeConnected(false);
-        }
-      });
-
-    // 清理订阅
-    return () => {
-      channel.unsubscribe();
-    };
-  }, []);
 
   // 统计数据
   const stats = {
@@ -439,14 +390,25 @@ function CustomerLifecyclePanel() {
       <div className="flex items-center justify-between mb-3 shrink-0">
         <div>
           <div className="font-medium text-sm">项目生命线</div>
-          <div className="text-xs text-muted-foreground">凯格咨询客户管理系统 · 共 {filteredData.length} 条记录</div>
+          <div className="text-xs text-muted-foreground">
+            凯格咨询客户管理系统 · 共 {filteredData.length} 条记录
+            {isLoading && " (更新中...)"}
+          </div>
         </div>
         <div className="flex items-center gap-2">
-          {/* 实时连接状态 */}
-          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground mr-2">
-            <span className={`h-1.5 w-1.5 rounded-full ${isRealtimeConnected ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`} />
-            <span>{isRealtimeConnected ? "实时同步" : "连接中..."}</span>
-          </div>
+          {/* 手动刷新按钮 */}
+          <button
+            onClick={refreshData}
+            disabled={isLoading}
+            className="flex items-center gap-1 px-2 py-1 rounded text-[10px] text-muted-foreground border border-border hover:bg-muted transition-all disabled:opacity-50"
+            title="手动刷新数据"
+          >
+            <RefreshCw size={10} className={cn(isLoading && "animate-spin")} />
+            刷新
+          </button>
+          <span className="text-[10px] text-muted-foreground">
+            更新于 {lastUpdated.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })}
+          </span>
           {/* 筛选按钮组 */}
           <div className="flex items-center gap-1.5">
             {filters.map((f) => (
@@ -817,47 +779,80 @@ function Calendar() {
   const [selectedDate, setSelectedDate] = useState<number | null>(null);
   const [showDetailPanel, setShowDetailPanel] = useState(false);
   const today = new Date();
-  const year = today.getFullYear();
-  const month = today.getMonth();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const firstDay = new Date(year, month, 1).getDay();
+  const [currentYear, setCurrentYear] = useState(today.getFullYear());
+  const [currentMonth, setCurrentMonth] = useState(today.getMonth());
+
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const firstDay = new Date(currentYear, currentMonth, 1).getDay();
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
   const emptyDays = Array.from({ length: firstDay }, (_, i) => i);
-  const taskDays = [3, 5, 8, 10, 12, 15, 18, 20, 22, 25, 27, 29];
 
-  // 模拟每日详细日程数据
-  const dailyEvents: Record<number, { time: string; title: string; type: string }[]> = {
-    16: [
-      { time: "10:30", title: "技术方案讨论", type: "会议" },
-      { time: "15:00", title: "数据库选型评审", type: "评审" },
-    ],
-    18: [
-      { time: "09:00", title: "周例会", type: "会议" },
-      { time: "14:00", title: "客户需求沟通", type: "会议" },
-      { time: "16:30", title: "代码审查", type: "评审" },
-    ],
-    20: [
-      { time: "10:00", title: "产品评审", type: "评审" },
-      { time: "15:00", title: "团队建设", type: "活动" },
-    ],
+  // 每月有事项的日期（模拟数据）
+  const taskDaysByMonth: Record<number, number[]> = {
+    0: [6, 15, 20],
+    1: [5, 18, 25],
+    2: [3, 10, 18, 28],
+    3: [7, 12, 20],
+    4: [6, 14, 22, 30],
+    5: [3, 5, 8, 10, 12, 15, 18, 20, 22, 25, 27, 29],
+    6: [4, 11, 19, 28],
+    7: [5, 13, 21],
+    8: [2, 10, 18, 30],
+    9: [8, 16, 24],
+    10: [4, 12, 20, 28],
+    11: [5, 12, 20, 30],
   };
+  const taskDays = taskDaysByMonth[currentMonth] || [];
+
+  const prevMonth = () => {
+    if (currentMonth === 0) { setCurrentMonth(11); setCurrentYear(currentYear - 1); }
+    else setCurrentMonth(currentMonth - 1);
+    setSelectedDate(null);
+  };
+  const nextMonth = () => {
+    if (currentMonth === 11) { setCurrentMonth(0); setCurrentYear(currentYear + 1); }
+    else setCurrentMonth(currentMonth + 1);
+    setSelectedDate(null);
+  };
+
+  // 模拟每日详细日程数据（按月份）
+  const dailyEventsByMonth: Record<number, Record<number, { time: string; title: string; type: string }[]>> = {
+    5: {
+      3: [{ time: "09:00", title: "项目启动会", type: "会议" }],
+      5: [{ time: "14:00", title: "客户拜访", type: "出差" }],
+      8: [{ time: "10:00", title: "技术方案评审", type: "评审" }],
+      10: [{ time: "09:30", title: "周例会", type: "会议" }],
+      12: [{ time: "全天", title: "北京出差", type: "出差" }],
+      15: [{ time: "14:00", title: "需求文档评审", type: "评审" }],
+      18: [
+        { time: "15:00", title: "部门会议", type: "会议" },
+        { time: "16:30", title: "代码审查", type: "评审" },
+      ],
+      20: [{ time: "10:00", title: "上海客户拜访", type: "出差" }],
+      22: [{ time: "09:00", title: "架构设计评审", type: "评审" }],
+      25: [{ time: "16:00", title: "月度总结会", type: "会议" }],
+      27: [{ time: "全天", title: "深圳出差", type: "出差" }],
+      29: [{ time: "14:30", title: "产品方案汇报", type: "评审" }],
+    },
+  };
+  const dailyEvents = dailyEventsByMonth[currentMonth] || {};
 
   const events = selectedDate && dailyEvents[selectedDate]
     ? dailyEvents[selectedDate]
-    : dailyEvents[16] || [];
+    : [];
 
   return (
     <div className="p-4">
       <div className="flex justify-between items-center mb-3">
         <div>
-          <div className="font-medium text-base">{year}年 {month + 1}月</div>
+          <div className="font-medium text-base">{currentYear}年 {currentMonth + 1}月</div>
           <div className="text-xs text-muted-foreground">日程密度视图</div>
         </div>
         <div className="flex gap-1">
-          <button className="w-7 h-7 rounded border border-border flex items-center justify-center hover:bg-muted transition-all">
+          <button onClick={prevMonth} className="w-7 h-7 rounded border border-border flex items-center justify-center hover:bg-muted transition-all">
             <ChevronLeft size={14} />
           </button>
-          <button className="w-7 h-7 rounded border border-border flex items-center justify-center hover:bg-muted transition-all">
+          <button onClick={nextMonth} className="w-7 h-7 rounded border border-border flex items-center justify-center hover:bg-muted transition-all">
             <ChevronRight size={14} />
           </button>
         </div>
@@ -872,9 +867,10 @@ function Calendar() {
           <div key={`empty-${i}`} className="aspect-square" />
         ))}
         {days.map((day) => {
-          const isToday = day === today.getDate();
+          const isToday = day === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear();
           const hasTask = taskDays.includes(day);
           const isSelected = selectedDate === day;
+          const hasEvents = dailyEvents[day]?.length > 0;
           return (
             <button
               key={day}
@@ -888,20 +884,41 @@ function Calendar() {
                   ? "text-background font-medium"
                   : isSelected
                     ? "border border-foreground text-foreground"
-                    : hasTask
+                    : hasTask || hasEvents
                       ? "text-foreground hover:bg-muted"
                       : "text-muted-foreground hover:bg-muted",
               )}
               style={isToday ? { background: "var(--foreground)" } : {}}
             >
               <span>{day}</span>
-              {(hasTask || dailyEvents[day]) && !isToday && (
+              {(hasTask || hasEvents) && !isToday && (
                 <span className="mt-0.5 w-1 h-1 rounded-full bg-foreground" />
               )}
             </button>
           );
         })}
       </div>
+
+      {/* 选中日期的事项展示 */}
+      {selectedDate && events.length > 0 && (
+        <div className="mt-2 p-2 rounded-lg border border-border" style={{ background: "var(--surface)" }}>
+          <div className="text-[10px] font-medium text-muted-foreground mb-1.5">{currentMonth + 1}月{selectedDate}日 日程</div>
+          <div className="space-y-1">
+            {events.map((ev, i) => (
+              <div key={i} className="flex items-center gap-2 text-[11px]">
+                <span className="text-muted-foreground shrink-0 w-10">{ev.time}</span>
+                <span className="text-foreground truncate">{ev.title}</span>
+                <span className="text-[9px] px-1 py-0.5 rounded bg-primary/10 text-primary shrink-0">{ev.type}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {selectedDate && events.length === 0 && (
+        <div className="mt-2 p-2 rounded-lg border border-border text-center text-[11px] text-muted-foreground" style={{ background: "var(--surface)" }}>
+          {currentMonth + 1}月{selectedDate}日 暂无日程
+        </div>
+      )}
 
       {/* 详情按钮 - 打开大型面板 */}
       <button
@@ -918,41 +935,45 @@ function Calendar() {
   );
 }
 
-// 备忘录
+// 行动备忘录（共享数据版本）
 function MemoPanel() {
-  const [memos, setMemos] = useState([
-    { id: "1", content: "整理本周项目周报", completed: false },
-    { id: "2", content: "客户 Demo 演示排练", completed: false },
-    { id: "3", content: "合作商合同条款确认", completed: true },
-  ]);
+  const { memos, loading, addMemo, toggleMemo, deleteMemo } = usePersonalMemos();
   const [newMemo, setNewMemo] = useState("");
 
-  const addMemo = () => {
+  const handleAddMemo = () => {
     if (!newMemo.trim()) return;
-    setMemos([{ id: Date.now().toString(), content: newMemo, completed: false }, ...memos]);
+    addMemo(newMemo.trim());
     setNewMemo("");
   };
 
-  const toggleMemo = (id: string) => {
-    setMemos(memos.map(m => m.id === id ? { ...m, completed: !m.completed } : m));
+  const handleToggleMemo = (id: string) => {
+    toggleMemo(id);
   };
 
-  const deleteMemo = (id: string) => {
-    setMemos(memos.filter(m => m.id !== id));
+  const handleDeleteMemo = (id: string) => {
+    deleteMemo(id);
   };
+
+  if (loading) {
+    return (
+      <div className="p-4">
+        <div className="text-xs text-muted-foreground text-center py-6">加载中...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4">
       <div className="mb-3">
         <div className="font-medium text-sm">行动备忘录</div>
-        <div className="text-xs text-muted-foreground">轻量记录，存储在浏览器本地</div>
+        <div className="text-xs text-muted-foreground">个人待办 · {memos.filter(m => !m.completed).length} 项未完成</div>
       </div>
       <div className="flex gap-2 mb-3">
         <input
           type="text"
           value={newMemo}
           onChange={(e) => setNewMemo(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && addMemo()}
+          onKeyDown={(e) => e.key === "Enter" && handleAddMemo()}
           placeholder="输入新事项..."
           className="flex-1 h-8 px-3 rounded text-xs outline-none transition-all"
           style={{ 
@@ -961,7 +982,7 @@ function MemoPanel() {
           }}
         />
         <button 
-          onClick={addMemo}
+          onClick={handleAddMemo}
           className="h-8 px-3 rounded text-background font-medium text-xs transition-all hover:opacity-90"
           style={{ background: "var(--foreground)" }}
         >
@@ -981,7 +1002,7 @@ function MemoPanel() {
             <input
               type="checkbox"
               checked={memo.completed}
-              onChange={() => toggleMemo(memo.id)}
+              onChange={() => handleToggleMemo(memo.id)}
               className="mt-0.5 w-3.5 h-3.5 rounded border-border cursor-pointer"
             />
             <div 
@@ -991,7 +1012,7 @@ function MemoPanel() {
               {memo.content}
             </div>
             <button 
-              onClick={() => deleteMemo(memo.id)}
+              onClick={() => handleDeleteMemo(memo.id)}
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
               <X size={12} />
@@ -1629,9 +1650,6 @@ function Index() {
           {/* 左侧主内容 */}
           <div className="space-y-5">
             <DataDashboard />
-
-            {/* CRM 数据汇总 */}
-            <CrmSummaryPanel />
 
             {/* 项目生命线 - 客户数据看板 */}
             <CustomerLifecyclePanel />

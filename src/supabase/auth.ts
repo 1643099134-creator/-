@@ -21,7 +21,7 @@ const DEMO_USERS = [
 
 function readSession() {
   try {
-    return JSON.parse(localStorage.getItem(SESSION_KEY) || "null");
+    return JSON.parse(sessionStorage.getItem(SESSION_KEY) || "null");
   } catch {
     return null;
   }
@@ -35,7 +35,7 @@ function persistSession(user: any) {
     token_type: "bearer",
     user,
   };
-  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
   return session;
 }
 
@@ -95,7 +95,7 @@ export async function signIn(username: string, password: string) {
 }
 
 export async function signOut() {
-  localStorage.removeItem(SESSION_KEY);
+  sessionStorage.removeItem(SESSION_KEY);
 }
 
 export async function getSession(): Promise<Session | null> {
