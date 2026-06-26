@@ -12,6 +12,7 @@ import tsConfigPaths from "vite-tsconfig-paths";
  * - outDir 'dist' / assetsDir 'assets' — 归一化产物目录
  */
 export default defineConfig({
+  base: '/-/',
   plugins: [
     tailwindcss(),
     TanStackRouterVite(),
